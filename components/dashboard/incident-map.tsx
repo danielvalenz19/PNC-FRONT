@@ -61,12 +61,11 @@ export function IncidentMap() {
       const ACTIVE = new Set(["NEW", "ACK", "DISPATCHED", "IN_PROGRESS"])
       setIncidents(incidentsResponse.items.filter((i: any) => ACTIVE.has(i.status)))
 
-      // Load units with location
-      const unitsResponse = await apiClient.getUnits({
-        status: "AVAILABLE,BUSY",
-      })
+      // Load units with location. Backend expects lowercase statuses and does not accept CSV lists.
+      const unitsResponse = await apiClient.getUnits()
+      const operativas = (unitsResponse as any[]).filter((u: any) => ["available", "en_route", "on_site"].includes(u.status))
       setUnits(
-        (unitsResponse as any[]).filter(
+        operativas.filter(
           (unit: Unit) => typeof unit.lat === "number" && Number.isFinite(unit.lat) && typeof unit.lng === "number" && Number.isFinite(unit.lng),
         ),
       )

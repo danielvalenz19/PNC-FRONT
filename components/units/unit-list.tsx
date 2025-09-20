@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { apiClient } from "@/lib/api"
+import { apiClient } from "@/lib/api-client"
 import { useSocket } from "@/hooks/use-socket"
 import { useAuth } from "@/hooks/use-auth"
 import type { UnitStatus } from "@/lib/config"
@@ -19,7 +19,7 @@ interface Unit {
   name: string
   type: string
   plate?: string
-  status: UnitStatus
+  status: string
   active: boolean
   lat?: number
   lng?: number
@@ -38,8 +38,8 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<UnitStatus>("AVAILABLE") // Updated default value
-  const [typeFilter, setTypeFilter] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("available") // Updated default value (backend uses lowercase)
+  const [typeFilter, setTypeFilter] = useState<string>("all")
   const { hasRole } = useAuth()
   const { on, off, subscribeToOps } = useSocket()
 
@@ -48,11 +48,24 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
       setLoading(true)
       setError(null)
 
-      const response = await apiClient.getUnits({
-        status: statusFilter || undefined,
-        type: typeFilter || undefined,
+      const response: any = await apiClient.getUnits({
+        // backend does not accept CSV; pass single status if using server-side filter
+        status: typeof statusFilter === "string" ? statusFilter : undefined,
+        // treat 'all' as no type filter
+        type: typeFilter === "all" ? undefined : typeFilter || undefined,
       })
-      setUnits(response)
+
+      // API returns an array (not paginated). If some code returns { items: [] }, accept both.
+  const unitsArr = Array.isArray(response) ? response : (response && response.items ? response.items : [])
+
+      // Normalize coordinates to numbers when present
+      const normalized = (unitsArr as any[]).map((u) => ({
+        ...u,
+        lat: u.lat !== undefined && u.lat !== null ? Number(u.lat) : undefined,
+        lng: u.lng !== undefined && u.lng !== null ? Number(u.lng) : undefined,
+      }))
+
+      setUnits(normalized)
     } catch (err) {
       setError("Error al cargar unidades")
       console.error("[v0] Failed to load units:", err)
@@ -70,7 +83,7 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
 
     const handleUnitUpdate = (data: {
       id: number
-      status?: UnitStatus
+      status?: string
       lat?: number
       lng?: number
       last_seen?: string
@@ -92,10 +105,10 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
       )
     }
 
-    on("units:update", handleUnitUpdate)
+  on("units:update", handleUnitUpdate as any)
 
     return () => {
-      off("units:update", handleUnitUpdate)
+      off("units:update", handleUnitUpdate as any)
     }
   }, [on, off, subscribeToOps])
 
@@ -114,30 +127,32 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
     setFilteredUnits(filtered)
   }, [units, searchQuery])
 
-  const getStatusColor = (status: UnitStatus) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case "AVAILABLE":
+      case "available":
         return "bg-green-500/20 text-green-700 border-green-500/30"
-      case "BUSY":
+      case "en_route":
+      case "on_site":
         return "bg-yellow-500/20 text-yellow-700 border-yellow-500/30"
-      case "OFFLINE":
+      case "out_of_service":
         return "bg-gray-500/20 text-gray-700 border-gray-500/30"
-      case "MAINTENANCE":
+      case "maintenance":
         return "bg-red-500/20 text-red-700 border-red-500/30"
       default:
         return "bg-gray-500/20 text-gray-700 border-gray-500/30"
     }
   }
 
-  const getStatusLabel = (status: UnitStatus) => {
+  const getStatusLabel = (status: string) => {
     switch (status) {
-      case "AVAILABLE":
+      case "available":
         return "Disponible"
-      case "BUSY":
+      case "en_route":
+      case "on_site":
         return "Ocupada"
-      case "OFFLINE":
+      case "out_of_service":
         return "Fuera de línea"
-      case "MAINTENANCE":
+      case "maintenance":
         return "Mantenimiento"
       default:
         return status
@@ -224,15 +239,15 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
             />
           </div>
 
-          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as UnitStatus)}>
+          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
             <SelectTrigger className="bg-input/40 backdrop-blur-sm">
               <SelectValue placeholder="Filtrar por estado" />
             </SelectTrigger>
             <SelectContent className="glass-card border-border/25">
-              <SelectItem value="AVAILABLE">Disponible</SelectItem>
-              <SelectItem value="BUSY">Ocupada</SelectItem>
-              <SelectItem value="OFFLINE">Fuera de línea</SelectItem>
-              <SelectItem value="MAINTENANCE">Mantenimiento</SelectItem>
+              <SelectItem value="available">Disponible</SelectItem>
+              <SelectItem value="en_route">En Ruta</SelectItem>
+              <SelectItem value="on_site">En Sitio</SelectItem>
+              <SelectItem value="out_of_service">Fuera de servicio</SelectItem>
             </SelectContent>
           </Select>
 
@@ -241,7 +256,7 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
               <SelectValue placeholder="Filtrar por tipo" />
             </SelectTrigger>
             <SelectContent className="glass-card border-border/25">
-              <SelectItem value="">Todos los tipos</SelectItem>
+              <SelectItem value="all">Todos los tipos</SelectItem>
               {uniqueTypes.map((type) => (
                 <SelectItem key={type} value={type}>
                   {type}
@@ -288,11 +303,11 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
                 </div>
 
                 <div className="space-y-2 mb-4">
-                  {unit.lat && unit.lng && (
+                  {Number.isFinite(Number(unit.lat)) && Number.isFinite(Number(unit.lng)) && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <MapPin className="w-3 h-3" />
                       <span>
-                        {unit.lat.toFixed(4)}, {unit.lng.toFixed(4)}
+                        {Number(unit.lat).toFixed(4)}, {Number(unit.lng).toFixed(4)}
                       </span>
                     </div>
                   )}

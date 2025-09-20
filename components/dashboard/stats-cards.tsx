@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { apiClient } from "@/lib/api"
+import { apiClient } from "@/lib/api-client"
 import { AlertTriangle, Car, Clock, CheckCircle } from "lucide-react"
 
 interface DashboardStats {
@@ -30,9 +30,12 @@ export function StatsCards() {
       const newIncidents = incidentsResponse.items.filter((i: any) => i.status === "NEW").length
 
       // Load units stats
-      const unitsResponse = await apiClient.getUnits()
-      const totalUnits = unitsResponse.length
-      const availableUnits = unitsResponse.filter((u: any) => u.status === "AVAILABLE").length
+  const unitsResponse = await apiClient.getUnits()
+  const totalUnits = unitsResponse.length
+  // Backend uses lowercase statuses: available, en_route, on_site, out_of_service
+  const availableUnits = unitsResponse.filter((u: any) => u.status === "available").length
+  const busyUnits = unitsResponse.filter((u: any) => ["en_route", "on_site"].includes(u.status)).length
+  const maintenanceUnits = unitsResponse.filter((u: any) => u.status === "out_of_service").length
 
       // Load KPIs for response time and SLA
       const today = new Date()
@@ -97,7 +100,7 @@ export function StatsCards() {
       icon: Car,
       color: "text-green-600",
       bgColor: "bg-green-500/10",
-      change: stats ? `${Math.round((stats.availableUnits / stats.totalUnits) * 100)}% disponible` : undefined,
+          change: stats ? `${Math.round((stats.availableUnits / stats.totalUnits) * 100)}% disponible` : undefined,
       changeColor: "text-green-600",
     },
     {

@@ -176,6 +176,14 @@ export class ApiClient {
     const qs = this.buildQuery(params)
     return this.get(`/api/v1/ops/units${qs}`)
   }
+
+  getKPIs(from?: string, to?: string) {
+    const p = new URLSearchParams()
+    if (from) p.append("from", from)
+    if (to) p.append("to", to)
+    const qs = p.toString() ? `?${p.toString()}` : ""
+    return this.get(`/api/v1/ops/reports/kpis${qs}`)
+  }
 }
 
 export const apiClient = ApiClient.getInstance()
