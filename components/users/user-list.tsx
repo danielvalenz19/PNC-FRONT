@@ -56,12 +56,17 @@ export function UserList({ onEditUser, onCreateUser, refreshTrigger }: UserListP
         limit: 20,
       })
 
+      // Backend returns { meta, data }, where meta has page/limit/total and data is the list
       if (Array.isArray(response)) {
+        // backwards compatibility: older endpoints returned array directly
         setUsers(response)
         setTotalPages(1)
       } else {
-        setUsers(response.items || [])
-        setTotalPages(Math.ceil((response.total || 0) / 20))
+        const resp: any = response
+        const data = resp?.data ?? resp?.items ?? []
+        const meta = resp?.meta ?? { page: currentPage, limit: 20, total: data.length }
+        setUsers(data)
+        setTotalPages(Math.max(1, Math.ceil((meta.total || data.length) / (meta.limit || 20))))
       }
     } catch (err) {
       setError("Error al cargar usuarios")
@@ -161,10 +166,10 @@ export function UserList({ onEditUser, onCreateUser, refreshTrigger }: UserListP
       )
     }
 
-    on("users:update", handleUserUpdate)
+  on("users:update" as any, handleUserUpdate)
 
     return () => {
-      off("users:update", handleUserUpdate)
+  off("users:update" as any, handleUserUpdate)
     }
   }, [on, off, subscribeToOps])
 

@@ -38,16 +38,27 @@ export function UserStats({ refreshTrigger }: UserStatsProps) {
       setLoading(true)
       const users = await apiClient.getUsers({})
 
-      const userList = Array.isArray(users) ? users : users.items || []
+      // Backend returns { meta, data }
+      let data: any[] = []
+      let meta: any = { total: 0 }
+
+      if (Array.isArray(users)) {
+        data = users
+        meta = { total: users.length }
+      } else {
+        const resp: any = users
+        data = resp?.data ?? resp?.items ?? []
+        meta = resp?.meta ?? { total: data.length }
+      }
 
       const newStats: UserStats = {
-        total: userList.length,
-        active: userList.filter((user: { status: string }) => user.status === "active").length,
-        inactive: userList.filter((user: { status: string }) => user.status === "inactive").length,
-        admins: userList.filter((user: { role: string }) => user.role === "admin").length,
-        operators: userList.filter((user: { role: string }) => user.role === "operator").length,
-        supervisors: userList.filter((user: { role: string }) => user.role === "supervisor").length,
-        units: userList.filter((user: { role: string }) => user.role === "unit").length,
+        total: meta.total || data.length,
+        active: data.filter((user: { status: string }) => user.status === "active").length,
+        inactive: data.filter((user: { status: string }) => user.status === "inactive").length,
+        admins: data.filter((user: { role: string }) => user.role === "admin").length,
+        operators: data.filter((user: { role: string }) => user.role === "operator").length,
+        supervisors: data.filter((user: { role: string }) => user.role === "supervisor").length,
+        units: data.filter((user: { role: string }) => user.role === "unit").length,
       }
 
       setStats(newStats)
@@ -70,10 +81,10 @@ export function UserStats({ refreshTrigger }: UserStatsProps) {
       loadStats()
     }
 
-    on("users:update", handleUserUpdate)
+  on("users:update" as any, handleUserUpdate)
 
     return () => {
-      off("users:update", handleUserUpdate)
+      off("users:update" as any, handleUserUpdate)
     }
   }, [on, off, subscribeToOps])
 
