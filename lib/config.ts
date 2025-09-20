@@ -1,6 +1,8 @@
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_BASE || "https://a9f963ec0cc9.ngrok-free.app",
-  WS_URL: process.env.NEXT_PUBLIC_WS_URL || "https://a9f963ec0cc9.ngrok-free.app",
+  // Allow overriding via NEXT_PUBLIC_* env vars. When not set, default to localhost:4000 for local dev.
+  BASE_URL: process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000",
+  WS_URL: process.env.NEXT_PUBLIC_WS_URL || "http://localhost:4000",
+  // Keep explicit fallbacks for other tools that might inspect them
   FALLBACK_BASE_URL: "http://localhost:4000",
   FALLBACK_WS_URL: "http://localhost:4000",
 } as const
