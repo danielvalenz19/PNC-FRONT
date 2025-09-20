@@ -39,7 +39,7 @@ const STATUS_LABELS = {
 }
 
 export function IncidentsByStatusChart({ dateRange }: IncidentsByStatusChartProps) {
-  const [data, setData] = useState<StatusData[]>([])
+  const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -52,8 +52,22 @@ export function IncidentsByStatusChart({ dateRange }: IncidentsByStatusChartProp
       params.set("from", dateRange.from)
       params.set("to", dateRange.to)
 
-      const response = await apiClient.get<StatusData[]>(`/reports/incidents-by-status?${params.toString()}`)
-      setData(response)
+      const response = await apiClient.get<any>(`/ops/reports/incidents-by-status?${params.toString()}`)
+      // Normalize payload to array and compute percentage client-side
+      const raw: any[] = Array.isArray(response)
+        ? response
+        : (response?.items || response?.data || [])
+      const total = raw.reduce((sum, r) => sum + Number(r?.count ?? 0), 0)
+      const normalized = raw.map((r) => {
+        const count = Number(r?.count ?? 0)
+        const pct = total > 0 ? (count / total) * 100 : 0
+        return {
+          ...r,
+          count,
+          percentage: Number.isFinite(Number(r?.percentage)) ? Number(r.percentage) : pct,
+        }
+      })
+      setData(normalized as any[])
     } catch (err) {
       setError("Error al cargar datos por estado")
       console.error("Failed to load status data:", err)
@@ -68,12 +82,17 @@ export function IncidentsByStatusChart({ dateRange }: IncidentsByStatusChartProp
 
   const renderCustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload
+      const p = payload[0]
+      const d = p?.payload || {}
+      const percent = Number.isFinite(d?.percentage)
+        ? Number(d.percentage)
+        : Number(p?.percent ?? 0) * 100
+      const statusKey = String(d?.status ?? "").toUpperCase() as IncidentStatus
       return (
         <div className="bg-card/90 backdrop-blur-md border border-border/25 rounded-lg p-3 shadow-lg">
-          <p className="font-medium">{STATUS_LABELS[data.status as IncidentStatus]}</p>
+          <p className="font-medium">{STATUS_LABELS[statusKey as IncidentStatus] || statusKey}</p>
           <p className="text-sm text-muted-foreground">
-            {data.count} incidentes ({data.percentage.toFixed(1)}%)
+            {Number(d?.count ?? 0)} incidentes ({Number.isFinite(percent) ? percent.toFixed(1) : "-"}%)
           </p>
         </div>
       )
@@ -142,19 +161,25 @@ export function IncidentsByStatusChart({ dateRange }: IncidentsByStatusChartProp
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="count"
-                label={({ percentage }) => `${percentage.toFixed(1)}%`}
+                label={(info: any) => `${Number((info?.percent ?? 0) * 100).toFixed(1)}%`}
               >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status]} />
-                ))}
+                {data.map((entry, index) => {
+                  const key = String(entry.status).toUpperCase() as keyof typeof STATUS_COLORS
+                  const color = STATUS_COLORS[key] ?? "#9ca3af"
+                  return <Cell key={`cell-${index}`} fill={color} />
+                })}
               </Pie>
               <Tooltip content={renderCustomTooltip} />
               <Legend
-                formatter={(value, entry) => (
-                  <span style={{ color: entry.color }}>
-                    {STATUS_LABELS[value as IncidentStatus]} ({entry.payload?.count})
-                  </span>
-                )}
+                formatter={(value: any, entry: any) => {
+                  const key = String(value).toUpperCase() as IncidentStatus
+                  const label = STATUS_LABELS[key] || key
+                  return (
+                    <span style={{ color: entry?.color }}>
+                      {label} ({entry?.payload?.count})
+                    </span>
+                  )
+                }}
               />
             </PieChart>
           </ResponsiveContainer>

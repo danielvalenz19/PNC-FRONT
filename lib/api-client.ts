@@ -60,7 +60,12 @@ export class ApiClient {
 
   async request<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const tokens = this.authManager.getTokens()
-    const url = `${API_CONFIG.BASE_URL}${endpoint}`
+    // Normalize endpoint: ensure it is prefixed with /api/v1 when caller passes /ops/... or /reports/...
+    let ep = endpoint
+    if (!ep.startsWith("/api/")) {
+      ep = `/api/v1${ep.startsWith("/") ? "" : "/"}${ep}`
+    }
+    const url = `${API_CONFIG.BASE_URL}${ep}`
 
     const config: RequestInit = {
       ...options,
@@ -104,6 +109,17 @@ export class ApiClient {
       }
 
       if (!response.ok) {
+        // Fallback: if /api/v1/reports/* returns 404, retry on /api/v1/ops/reports/*
+        if (response.status === 404 && ep.startsWith("/api/v1/reports/")) {
+          const altEp = ep.replace("/api/v1/reports/", "/api/v1/ops/reports/")
+          const altUrl = `${API_CONFIG.BASE_URL}${altEp}`
+          const altResponse = await fetch(altUrl, config)
+          if (altResponse.ok) {
+            return (altResponse.status === 204
+              ? (undefined as T)
+              : ((await altResponse.json()) as T))
+          }
+        }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 

@@ -35,7 +35,7 @@ export function ResponseTimeChart({ dateRange }: ResponseTimeChartProps) {
       params.set("to", dateRange.to)
       params.set("group_by", "day")
 
-      const response = await apiClient.get<ResponseTimeData[]>(`/reports/response-times?${params.toString()}`)
+  const response = await apiClient.get<ResponseTimeData[]>(`/ops/reports/response-times?${params.toString()}`)
       setData(response)
     } catch (err) {
       setError("Error al cargar datos del gráfico")

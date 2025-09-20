@@ -35,8 +35,8 @@ export function IncidentsVolumeChart({ dateRange }: IncidentsVolumeChartProps) {
       params.set("to", dateRange.to)
       params.set("group_by", "day")
 
-      const response = await apiClient.get<VolumeData[]>(`/reports/incidents-volume?${params.toString()}`)
-      setData(response)
+  const response = await apiClient.get<any>(`/ops/reports/incidents-volume?${params.toString()}`)
+  setData(response as VolumeData[])
     } catch (err) {
       setError("Error al cargar datos de volumen")
       console.error("Failed to load volume data:", err)

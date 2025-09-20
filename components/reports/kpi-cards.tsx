@@ -42,7 +42,7 @@ export function KPICards({ dateRange }: KPICardsProps) {
       params.set("from", dateRange.from)
       params.set("to", dateRange.to)
 
-      const response = await apiClient.get<KPIData>(`/reports/kpis?${params.toString()}`)
+  const response = await apiClient.get<KPIData>(`/ops/reports/kpis?${params.toString()}`)
       setKpis(response)
     } catch (err) {
       setError("Error al cargar KPIs")
