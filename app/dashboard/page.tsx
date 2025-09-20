@@ -1,10 +1,16 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { RouteGuard } from "@/components/auth/route-guard"
 import { AdminLayout } from "@/components/layout/admin-layout"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { IncidentQueue } from "@/components/dashboard/incident-queue"
-import { IncidentMap } from "@/components/dashboard/incident-map"
+
+// Load IncidentMap client-side only to avoid Leaflet SSR errors
+const IncidentMap = dynamic(
+  () => import("@/components/dashboard/incident-map").then((m) => m.IncidentMap),
+  { ssr: false },
+)
 
 export default function DashboardPage() {
   return (

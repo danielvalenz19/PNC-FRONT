@@ -9,13 +9,14 @@ import { useSocket } from "@/hooks/use-socket"
 import type { IncidentStatus } from "@/lib/config"
 import { LucideMap, Layers } from "lucide-react"
 import dynamic from "next/dynamic"
-import L from "leaflet"
+// Note: do NOT import 'leaflet' at module top-level to avoid SSR issues.
 
 // Dynamically import Leaflet components to avoid SSR issues
-const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false })
-const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false })
-const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false })
-const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), { ssr: false })
+// Cast to `any` so TypeScript won't attempt to check react-leaflet types at module-level.
+const MapContainer: any = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false })
+const TileLayer: any = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false })
+const Marker: any = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false })
+const Popup: any = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), { ssr: false })
 
 interface MapIncident {
   id: string
@@ -40,7 +41,8 @@ export function IncidentMap() {
   const [units, setUnits] = useState<Unit[]>([])
   const [loading, setLoading] = useState(true)
   const [showUnits, setShowUnits] = useState(true)
-  const mapRef = useRef<any>(null)
+  const [mounted, setMounted] = useState(false)
+  const leafletRef = useRef<any>(null)
   const { on, off, subscribeToOps } = useSocket()
 
   // San Salvador coordinates as default center
@@ -52,10 +54,11 @@ export function IncidentMap() {
 
       // Load active incidents
       const incidentsResponse = await apiClient.getIncidents({
-        status: "NEW,ACK,DISPATCHED,IN_PROGRESS",
+        // Opción A: no enviar `status`, el backend listará por defecto
         limit: 100,
       })
-      setIncidents(incidentsResponse.items)
+  const ACTIVE = new Set(["NEW", "ACK", "DISPATCHED", "IN_PROGRESS"])
+  setIncidents(incidentsResponse.items.filter((i: any) => ACTIVE.has(i.status)))
 
       // Load units with location
       const unitsResponse = await apiClient.getUnits({
@@ -70,7 +73,19 @@ export function IncidentMap() {
   }
 
   useEffect(() => {
-    loadMapData()
+    setMounted(true)
+    // Dynamically import leaflet only on client and store it in a ref
+    ;(async () => {
+      try {
+        leafletRef.current = (await import("leaflet")).default
+        // Optionally, fix leaflet's icon URLs or any setup here if required
+      } catch (err) {
+        console.warn("[v0] Failed to load leaflet dynamically:", err)
+      }
+
+      // After attempting to load leaflet, load map data
+      loadMapData()
+    })()
     subscribeToOps()
 
     const handleNewIncident = (data: {
@@ -138,10 +153,10 @@ export function IncidentMap() {
       )
     }
 
-    on("incidents:new", handleNewIncident)
-    on("incidents:update", handleIncidentUpdate)
-    on("incident:update", handleIncidentUpdate)
-    on("units:update", handleUnitUpdate)
+  on("incidents:new", handleNewIncident)
+  on("incidents:update", handleIncidentUpdate)
+  on("incident:update", handleIncidentUpdate)
+  on("units:update", handleUnitUpdate)
 
     return () => {
       off("incidents:new", handleNewIncident)
@@ -176,7 +191,7 @@ export function IncidentMap() {
     }
   }
 
-  if (loading) {
+  if (loading || !leafletRef.current) {
     return (
       <Card className="glass-card h-96">
         <CardHeader>
@@ -195,6 +210,7 @@ export function IncidentMap() {
     )
   }
 
+  if (!mounted) return null
   return (
     <Card className="glass-card">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -222,61 +238,69 @@ export function IncidentMap() {
       </CardHeader>
       <CardContent className="p-0">
         <div className="h-96 rounded-b-2xl overflow-hidden">
-          <MapContainer center={defaultCenter} zoom={12} style={{ height: "100%", width: "100%" }} ref={mapRef}>
+          <MapContainer center={defaultCenter} zoom={12} style={{ height: "100%", width: "100%" }}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
             {/* Incident Markers */}
-            {incidents.map((incident) => (
-              <Marker
-                key={incident.id}
-                position={[incident.lat, incident.lng]}
-                icon={L.divIcon({
-                  className: "custom-marker",
-                  html: `<div style="background-color: ${getIncidentColor(incident.status, incident.priority)}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-                  iconSize: [20, 20],
-                  iconAnchor: [10, 10],
-                })}
-              >
-                <Popup>
-                  <div className="text-sm">
-                    <p className="font-semibold">Incidente {incident.id}</p>
-                    <p>Estado: {incident.status}</p>
-                    <p>Prioridad: {incident.priority || "N/A"}</p>
-                    <p className="text-xs text-gray-600">{new Date(incident.created_at).toLocaleString("es-ES")}</p>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+            {incidents.map((incident) => {
+              const L = leafletRef.current
+              const icon =
+                L && typeof L.divIcon === "function"
+                  ? L.divIcon({
+                      className: "custom-marker",
+                      html: `<div style="background-color: ${getIncidentColor(incident.status, incident.priority)}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                      iconSize: [20, 20],
+                      iconAnchor: [10, 10],
+                    })
+                  : undefined
 
-            {/* Unit Markers */}
-            {showUnits &&
-              units.map((unit) => (
-                <Marker
-                  key={`unit-${unit.id}`}
-                  position={[unit.lat!, unit.lng!]}
-                  icon={L.divIcon({
-                    className: "custom-marker",
-                    html: `<div style="background-color: ${getUnitColor(unit.status)}; width: 16px; height: 16px; border-radius: 2px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-                    iconSize: [16, 16],
-                    iconAnchor: [8, 8],
-                  })}
-                >
+              return (
+                <Marker key={incident.id} position={[incident.lat, incident.lng]} icon={icon as any}>
                   <Popup>
                     <div className="text-sm">
-                      <p className="font-semibold">{unit.name}</p>
-                      <p>Estado: {unit.status}</p>
-                      {unit.last_seen && (
-                        <p className="text-xs text-gray-600">
-                          Última actualización: {new Date(unit.last_seen).toLocaleString("es-ES")}
-                        </p>
-                      )}
+                      <p className="font-semibold">Incidente {incident.id}</p>
+                      <p>Estado: {incident.status}</p>
+                      <p>Prioridad: {incident.priority || "N/A"}</p>
+                      <p className="text-xs text-gray-600">{new Date(incident.created_at).toLocaleString("es-ES")}</p>
                     </div>
                   </Popup>
                 </Marker>
-              ))}
+              )
+            })}
+
+            {/* Unit Markers */}
+            {showUnits &&
+              units.map((unit) => {
+                const L = leafletRef.current
+                const icon =
+                  L && typeof L.divIcon === "function"
+                    ? L.divIcon({
+                        className: "custom-marker",
+                        html: `<div style="background-color: ${getUnitColor(unit.status)}; width: 16px; height: 16px; border-radius: 2px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8],
+                      })
+                    : undefined
+
+                return (
+                  <Marker key={`unit-${unit.id}`} position={[unit.lat!, unit.lng!]} icon={icon as any}>
+                    <Popup>
+                      <div className="text-sm">
+                        <p className="font-semibold">{unit.name}</p>
+                        <p>Estado: {unit.status}</p>
+                        {unit.last_seen && (
+                          <p className="text-xs text-gray-600">
+                            Última actualización: {new Date(unit.last_seen).toLocaleString("es-ES")}
+                          </p>
+                        )}
+                      </div>
+                    </Popup>
+                  </Marker>
+                )
+              })}
           </MapContainer>
         </div>
       </CardContent>

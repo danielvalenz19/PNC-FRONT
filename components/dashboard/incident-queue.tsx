@@ -33,10 +33,11 @@ export function IncidentQueue() {
     try {
       setLoading(true)
       const response = await apiClient.getIncidents({
-        status: "NEW,ACK,DISPATCHED,IN_PROGRESS",
+        // Opción A: no enviar `status`, el backend listará por defecto
         limit: 10,
       })
-      setIncidents(response.items)
+      const ACTIVE = new Set(["NEW", "ACK", "DISPATCHED", "IN_PROGRESS"])
+      setIncidents(response.items.filter((i: any) => ACTIVE.has(i.status)))
       setError(null)
     } catch (err) {
       setError("Error al cargar incidentes")

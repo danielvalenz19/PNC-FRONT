@@ -24,7 +24,7 @@ export function StatsCards() {
 
       // Load incidents stats
       const incidentsResponse = await apiClient.getIncidents({
-        status: "NEW,ACK,DISPATCHED,IN_PROGRESS",
+        // Opción A: no enviar `status`, el backend listará por defecto
       })
       const activeIncidents = incidentsResponse.items.length
       const newIncidents = incidentsResponse.items.filter((i: any) => i.status === "NEW").length
@@ -39,7 +39,7 @@ export function StatsCards() {
       const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
 
       try {
-        const kpisResponse = await apiClient.getKPIs(lastWeek.toISOString(), today.toISOString())
+        const kpisResponse: any = await apiClient.getKPIs(lastWeek.toISOString(), today.toISOString())
 
         setStats({
           activeIncidents,

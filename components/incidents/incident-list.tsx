@@ -41,7 +41,7 @@ export function IncidentList({ filters }: IncidentListProps) {
       setError(null)
 
       const response = await apiClient.getIncidents({
-        status: currentFilters.status,
+        // Opción A: no enviar `status` desde el frontend. Mantener otros filtros.
         from: currentFilters.from,
         to: currentFilters.to,
         q: currentFilters.q,

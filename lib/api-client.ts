@@ -58,7 +58,7 @@ export class ApiClient {
     }
   }
 
-  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  async request<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const tokens = this.authManager.getTokens()
     const url = `${API_CONFIG.BASE_URL}${endpoint}`
 
@@ -92,7 +92,7 @@ export class ApiClient {
             throw new Error(`HTTP ${retryResponse.status}: ${retryResponse.statusText}`)
           }
 
-          return retryResponse.status === 204 ? null : await retryResponse.json()
+          return (retryResponse.status === 204 ? (undefined as T) : ((await retryResponse.json()) as T))
         } catch (refreshError) {
           // Refresh failed, redirect to login
           this.authManager.clearTokens()
@@ -107,7 +107,7 @@ export class ApiClient {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
-      return response.status === 204 ? null : await response.json()
+  return (response.status === 204 ? (undefined as T) : ((await response.json()) as T))
     } catch (error) {
       console.error("API request failed:", error)
       throw error
@@ -135,6 +135,46 @@ export class ApiClient {
 
   delete<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: "DELETE" })
+  }
+
+  // Added convenience alias for PUT used in settings
+  put<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: "PUT",
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  // --- Helpers for query strings
+  private buildQuery(params?: Record<string, unknown>) {
+    const p = new URLSearchParams()
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v === undefined || v === null || v === "") return
+        if (k === "status" && String(v).includes(",")) return // backend no acepta CSV en status
+        p.set(k, String(v))
+      })
+    }
+    const s = p.toString()
+    return s ? `?${s}` : ""
+  }
+
+  // --- OPS endpoints (subset needed by dashboard)
+  getIncidents(params?: {
+    status?: string
+    q?: string
+    from?: string
+    to?: string
+    page?: number
+    limit?: number
+  }): Promise<{ items: any[]; page: number; total: number }> {
+    const qs = this.buildQuery(params)
+    return this.get(`/api/v1/ops/incidents${qs}`)
+  }
+
+  getUnits(params?: { status?: string; type?: string }): Promise<any[]> {
+    const qs = this.buildQuery(params)
+    return this.get(`/api/v1/ops/units${qs}`)
   }
 }
 
