@@ -77,6 +77,7 @@ export class ApiClient {
     }
 
     try {
+      console.log(`[api-client] Requesting: ${url}`)
       const response = await fetch(url, config)
 
       if (response.status === 401 && tokens) {
@@ -109,18 +110,45 @@ export class ApiClient {
       }
 
       if (!response.ok) {
-        // Fallback: if /api/v1/reports/* returns 404, retry on /api/v1/ops/reports/*
-        if (response.status === 404 && ep.startsWith("/api/v1/reports/")) {
-          const altEp = ep.replace("/api/v1/reports/", "/api/v1/ops/reports/")
-          const altUrl = `${API_CONFIG.BASE_URL}${altEp}`
-          const altResponse = await fetch(altUrl, config)
-          if (altResponse.ok) {
-            return (altResponse.status === 204
-              ? (undefined as T)
-              : ((await altResponse.json()) as T))
+        // If 404, attempt some safe fallbacks to handle backend route differences
+        if (response.status === 404) {
+          // 1) /api/v1/reports/* -> /api/v1/ops/reports/* (existing behavior)
+          if (ep.startsWith("/api/v1/reports/")) {
+            const altEp = ep.replace("/api/v1/reports/", "/api/v1/ops/reports/")
+            const altUrl = `${API_CONFIG.BASE_URL}${altEp}`
+            console.log(`[api-client] 404 received, retrying on ${altUrl}`)
+            const altResponse = await fetch(altUrl, config)
+            if (altResponse.ok) {
+              return (altResponse.status === 204
+                ? (undefined as T)
+                : ((await altResponse.json()) as T))
+            }
+          }
+
+          // 2) /api/v1/ops/... -> try without /ops/ (some backends expose non-ops routes)
+          if (ep.startsWith("/api/v1/ops/")) {
+            const altEp = ep.replace("/api/v1/ops/", "/api/v1/")
+            const altUrl = `${API_CONFIG.BASE_URL}${altEp}`
+            console.log(`[api-client] 404 received, retrying on ${altUrl}`)
+            const altResponse = await fetch(altUrl, config)
+            if (altResponse.ok) {
+              return (altResponse.status === 204
+                ? (undefined as T)
+                : ((await altResponse.json()) as T))
+            }
           }
         }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+
+        // Try to extract response body for a more informative error
+        let bodyText: string | null = null
+        try {
+          bodyText = await response.text()
+        } catch (e) {
+          /* ignore */
+        }
+
+        console.error(`[api-client] Request failed: ${url} -> ${response.status} ${response.statusText}`, bodyText)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}${bodyText ? ` - ${bodyText}` : ""}`)
       }
 
   return (response.status === 204 ? (undefined as T) : ((await response.json()) as T))
