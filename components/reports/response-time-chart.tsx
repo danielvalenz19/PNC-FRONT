@@ -116,16 +116,24 @@ export function ResponseTimeChart({ dateRange }: ResponseTimeChartProps) {
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-              <XAxis dataKey="date" tickFormatter={formatDate} stroke="rgba(255,255,255,0.7)" fontSize={12} />
-              <YAxis tickFormatter={formatTime} stroke="rgba(255,255,255,0.7)" fontSize={12} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={formatDate}
+                stroke="#111"
+                tick={{ fill: "#111", fontSize: 12 }}
+              />
+              <YAxis
+                tickFormatter={formatTime}
+                stroke="#111"
+                tick={{ fill: "#111", fontSize: 12 }}
+              />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255,255,255,0.2)",
+                  backgroundColor: "#fff",
+                  border: "1px solid #e5e7eb",
                   borderRadius: "8px",
-                  color: "#fff",
+                  color: "#111",
                 }}
                 labelFormatter={(label) => `Fecha: ${formatDate(label)}`}
                 formatter={(value: number, name: string) => [
@@ -133,21 +141,23 @@ export function ResponseTimeChart({ dateRange }: ResponseTimeChartProps) {
                   name === "ttr_avg" ? "Tiempo de Respuesta" : "Tiempo de Llegada",
                 ]}
               />
-              <Legend />
+              <Legend wrapperStyle={{ color: "#111" }} />
               <Line
                 type="monotone"
                 dataKey="ttr_avg"
-                stroke="#3b82f6"
+                stroke="#000"
                 strokeWidth={2}
-                dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
+                dot={{ fill: "#000", stroke: "#000", strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 5, stroke: "#000" }}
                 name="Tiempo de Respuesta"
               />
               <Line
                 type="monotone"
                 dataKey="tta_avg"
-                stroke="#8b5cf6"
+                stroke="#000"
                 strokeWidth={2}
-                dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 4 }}
+                dot={{ fill: "#000", stroke: "#000", strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 5, stroke: "#000" }}
                 name="Tiempo de Llegada"
               />
             </LineChart>

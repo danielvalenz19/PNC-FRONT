@@ -35,8 +35,17 @@ export function IncidentsVolumeChart({ dateRange }: IncidentsVolumeChartProps) {
       params.set("to", dateRange.to)
       params.set("group_by", "day")
 
-  const response = await apiClient.get<any>(`/ops/reports/incidents-volume?${params.toString()}`)
-  setData(response as VolumeData[])
+      const response = await apiClient.get<any>(`/ops/reports/incidents-volume?${params.toString()}`)
+
+      // Normaliza nombres y tipos para el BarChart
+      const mapped: VolumeData[] = (response ?? []).map((r: any) => ({
+        date: String(r.date ?? r.bucket ?? ""),
+        incidents_count: Number(r.incidents_count ?? r.created ?? 0),
+        resolved_count: Number(r.resolved_count ?? r.closed ?? 0),
+        avg_resolution_time: Number(r.avg_resolution_time ?? r.avg_res_sec ?? 0),
+      }))
+
+      setData(mapped)
     } catch (err) {
       setError("Error al cargar datos de volumen")
       console.error("Failed to load volume data:", err)
@@ -110,16 +119,23 @@ export function IncidentsVolumeChart({ dateRange }: IncidentsVolumeChartProps) {
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-              <XAxis dataKey="date" tickFormatter={formatDate} stroke="rgba(255,255,255,0.7)" fontSize={12} />
-              <YAxis stroke="rgba(255,255,255,0.7)" fontSize={12} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={formatDate}
+                stroke="#111"
+                tick={{ fill: "#111", fontSize: 12 }}
+              />
+              <YAxis
+                stroke="#111"
+                tick={{ fill: "#111", fontSize: 12 }}
+              />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255,255,255,0.2)",
+                  backgroundColor: "#fff",
+                  border: "1px solid #e5e7eb",
                   borderRadius: "8px",
-                  color: "#fff",
+                  color: "#111",
                 }}
                 labelFormatter={(label) => `Fecha: ${formatDate(label)}`}
                 formatter={(value: number, name: string) => [

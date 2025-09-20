@@ -63,6 +63,8 @@ export function IncidentsByStatusChart({ dateRange }: IncidentsByStatusChartProp
         const pct = total > 0 ? (count / total) * 100 : 0
         return {
           ...r,
+          // Normalize status to uppercase to match labels/colors map
+          status: String(r?.status ?? "").toUpperCase(),
           count,
           percentage: Number.isFinite(Number(r?.percentage)) ? Number(r.percentage) : pct,
         }
@@ -84,8 +86,9 @@ export function IncidentsByStatusChart({ dateRange }: IncidentsByStatusChartProp
     if (active && payload && payload.length) {
       const p = payload[0]
       const d = p?.payload || {}
-      const percent = Number.isFinite(d?.percentage)
-        ? Number(d.percentage)
+      const pctFromData = Number(d?.percentage)
+      const percent = Number.isFinite(pctFromData)
+        ? pctFromData
         : Number(p?.percent ?? 0) * 100
       const statusKey = String(d?.status ?? "").toUpperCase() as IncidentStatus
       return (
