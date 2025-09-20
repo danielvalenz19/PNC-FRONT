@@ -35,7 +35,7 @@ export function TopActivities({ dateRange }: TopActivitiesProps) {
       const response = await apiClient.get<{
         top_actions: Array<{ action: string; count: number }>
         top_users: Array<{ user: string; count: number }>
-      }>(`/audit/top-activities?${params.toString()}`)
+      }>(`/ops/audit/top-activities?${params.toString()}`)
 
       setTopActions(response.top_actions.slice(0, 5))
       setTopUsers(response.top_users.slice(0, 5))

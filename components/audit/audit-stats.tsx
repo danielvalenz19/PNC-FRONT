@@ -39,7 +39,7 @@ export function AuditStats({ dateRange }: AuditStatsProps) {
       if (dateRange?.from) params.set("from", dateRange.from)
       if (dateRange?.to) params.set("to", dateRange.to)
 
-      const response = await apiClient.get<AuditStats>(`/audit/stats?${params.toString()}`)
+  const response = await apiClient.get<AuditStats>(`/ops/audit/stats?${params.toString()}`)
       setStats(response)
     } catch (err) {
       console.error("Failed to load audit stats:", err)

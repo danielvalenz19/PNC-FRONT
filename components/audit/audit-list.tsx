@@ -50,7 +50,7 @@ export function AuditList({ filters }: AuditListProps) {
       params.set("page", (currentFilters.page || 1).toString())
       params.set("limit", (currentFilters.limit || 20).toString())
 
-      const response = await apiClient.get<AuditListResponse>(`/audit?${params.toString()}`)
+  const response = await apiClient.get<AuditListResponse>(`/ops/audit?${params.toString()}`)
 
       setEntries(response.items)
       setPagination({
