@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { apiClient } from "@/lib/api"
+import { apiClient } from "@/lib/api-client"
 import { useSocket } from "@/hooks/use-socket"
 import type { IncidentStatus } from "@/lib/config"
 import type { IncidentFilters } from "./incident-filters"
@@ -17,8 +17,8 @@ interface Incident {
   id: string
   created_at: string
   status: IncidentStatus
-  lat: number
-  lng: number
+  lat?: number
+  lng?: number
   accuracy?: number
   priority?: number
   battery?: number
@@ -49,7 +49,19 @@ export function IncidentList({ filters }: IncidentListProps) {
         limit: currentFilters.limit || 20,
       })
 
-      setIncidents(response.items)
+      const items = response.items.map((i: any) => {
+        const last = Array.isArray(i.locations) && i.locations.length ? i.locations[i.locations.length - 1] : null
+        const rawLat = i.lat ?? last?.lat
+        const rawLng = i.lng ?? last?.lng
+        const rawAcc = i.accuracy ?? last?.accuracy
+        return {
+          ...i,
+          lat: rawLat !== undefined && rawLat !== null ? Number(rawLat) : undefined,
+          lng: rawLng !== undefined && rawLng !== null ? Number(rawLng) : undefined,
+          accuracy: rawAcc !== undefined && rawAcc !== null ? Number(rawAcc) : undefined,
+        }
+      })
+      setIncidents(items)
       setPagination({
         page: response.page,
         total: response.total,
@@ -282,9 +294,13 @@ export function IncidentList({ filters }: IncidentListProps) {
                         <div className="flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
                           <span>
-                            {incident.lat.toFixed(4)}, {incident.lng.toFixed(4)}
+                            {Number.isFinite(Number(incident.lat)) && Number.isFinite(Number(incident.lng))
+                              ? `${Number(incident.lat).toFixed(4)}, ${Number(incident.lng).toFixed(4)}`
+                              : "Sin ubicación"}
                           </span>
-                          {incident.accuracy && <span>(±{incident.accuracy}m)</span>}
+                          {Number.isFinite(Number(incident.accuracy)) && (
+                            <span>(±{Number(incident.accuracy)}m)</span>
+                          )}
                         </div>
                       </div>
                     </div>
