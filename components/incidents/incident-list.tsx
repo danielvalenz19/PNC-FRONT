@@ -123,14 +123,14 @@ export function IncidentList({ filters }: IncidentListProps) {
       )
     }
 
-    on("incidents:new", handleNewIncident)
-    on("incidents:update", handleIncidentUpdate)
-    on("incident:update", handleIncidentUpdate)
+  on("incidents:new", handleNewIncident as any)
+  on("incidents:update", handleIncidentUpdate as any)
+  on("incident:update", handleIncidentUpdate as any)
 
     return () => {
-      off("incidents:new", handleNewIncident)
-      off("incidents:update", handleIncidentUpdate)
-      off("incident:update", handleIncidentUpdate)
+  off("incidents:new", handleNewIncident as any)
+  off("incidents:update", handleIncidentUpdate as any)
+  off("incident:update", handleIncidentUpdate as any)
     }
   }, [filters, on, off, subscribeToOps])
 

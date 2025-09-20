@@ -16,8 +16,8 @@ interface Incident {
   id: string
   created_at: string
   status: IncidentStatus
-  lat: number
-  lng: number
+  lat?: number
+  lng?: number
   accuracy?: number
   priority?: number
   battery?: number
@@ -29,6 +29,9 @@ export function IncidentQueue() {
   const [error, setError] = useState<string | null>(null)
   const { on, off, subscribeToOps } = useSocket()
 
+  // Nota: Opción A — no enviamos `status` al backend (este lista por defecto)
+  // y filtramos en frontend los estados activos. Además, normalizamos lat/lng/accuracy
+  // para tolerar valores vacíos o strings y evitar errores al renderizar.
   const loadIncidents = async () => {
     try {
       setLoading(true)
@@ -37,7 +40,21 @@ export function IncidentQueue() {
         limit: 10,
       })
       const ACTIVE = new Set(["NEW", "ACK", "DISPATCHED", "IN_PROGRESS"])
-      setIncidents(response.items.filter((i: any) => ACTIVE.has(i.status)))
+      const items = response.items
+        .filter((i: any) => ACTIVE.has(i.status))
+        .map((i: any) => {
+          const last = Array.isArray(i.locations) && i.locations.length ? i.locations[i.locations.length - 1] : null
+          const rawLat = i.lat ?? last?.lat
+          const rawLng = i.lng ?? last?.lng
+          const rawAcc = i.accuracy ?? last?.accuracy
+          return {
+            ...i,
+            lat: rawLat !== undefined && rawLat !== null ? Number(rawLat) : undefined,
+            lng: rawLng !== undefined && rawLng !== null ? Number(rawLng) : undefined,
+            accuracy: rawAcc !== undefined && rawAcc !== null ? Number(rawAcc) : undefined,
+          }
+        })
+      setIncidents(items)
       setError(null)
     } catch (err) {
       setError("Error al cargar incidentes")
@@ -93,14 +110,14 @@ export function IncidentQueue() {
       )
     }
 
-    on("incidents:new", handleNewIncident)
-    on("incidents:update", handleIncidentUpdate)
-    on("incident:update", handleIncidentUpdate)
+  on("incidents:new", handleNewIncident as any)
+  on("incidents:update", handleIncidentUpdate as any)
+  on("incident:update", handleIncidentUpdate as any)
 
     return () => {
-      off("incidents:new", handleNewIncident)
-      off("incidents:update", handleIncidentUpdate)
-      off("incident:update", handleIncidentUpdate)
+  off("incidents:new", handleNewIncident as any)
+  off("incidents:update", handleIncidentUpdate as any)
+  off("incident:update", handleIncidentUpdate as any)
     }
   }, [on, off, subscribeToOps])
 
@@ -243,9 +260,13 @@ export function IncidentQueue() {
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <MapPin className="w-3 h-3" />
                       <span>
-                        {incident.lat.toFixed(4)}, {incident.lng.toFixed(4)}
+                        {Number.isFinite(Number(incident.lat)) && Number.isFinite(Number(incident.lng))
+                          ? `${Number(incident.lat).toFixed(4)}, ${Number(incident.lng).toFixed(4)}`
+                          : "Sin ubicación"}
                       </span>
-                      {incident.accuracy && <span className="text-xs">(±{incident.accuracy}m)</span>}
+                      {Number.isFinite(Number(incident.accuracy)) && (
+                        <span className="text-xs">(±{Number(incident.accuracy)}m)</span>
+                      )}
                     </div>
                   </div>
                 </div>

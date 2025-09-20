@@ -34,7 +34,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("[v0] Loading user...")
       const currentUser = await apiClient.getCurrentUser()
       console.log("[v0] Current user loaded:", currentUser)
-      setUser(currentUser)
+      setUser(
+        currentUser
+          ? {
+              ...currentUser,
+              role: currentUser.role as UserRole,
+            }
+          : null,
+      )
       console.log("[v0] User loaded: success")
     } catch (error) {
       console.log("[v0] Get current user failed:", error instanceof Error ? error.message : "Unknown error")

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -41,12 +41,13 @@ export function IncidentMap() {
   const [units, setUnits] = useState<Unit[]>([])
   const [loading, setLoading] = useState(true)
   const [showUnits, setShowUnits] = useState(true)
-  const [mounted, setMounted] = useState(false)
-  const leafletRef = useRef<any>(null)
+  const wrapperRef = useRef<HTMLDivElement | null>(null)
+  const [canMountMap, setCanMountMap] = useState(false)
+  const [L, setL] = useState<any>(null)
   const { on, off, subscribeToOps } = useSocket()
 
   // San Salvador coordinates as default center
-  const defaultCenter: [number, number] = [13.6929, -89.2182]
+  const defaultCenter = useMemo<[number, number]>(() => [13.6929, -89.2182], [])
 
   const loadMapData = async () => {
     try {
@@ -57,14 +58,18 @@ export function IncidentMap() {
         // Opción A: no enviar `status`, el backend listará por defecto
         limit: 100,
       })
-  const ACTIVE = new Set(["NEW", "ACK", "DISPATCHED", "IN_PROGRESS"])
-  setIncidents(incidentsResponse.items.filter((i: any) => ACTIVE.has(i.status)))
+      const ACTIVE = new Set(["NEW", "ACK", "DISPATCHED", "IN_PROGRESS"])
+      setIncidents(incidentsResponse.items.filter((i: any) => ACTIVE.has(i.status)))
 
       // Load units with location
       const unitsResponse = await apiClient.getUnits({
         status: "AVAILABLE,BUSY",
       })
-      setUnits(unitsResponse.filter((unit: Unit) => unit.lat && unit.lng))
+      setUnits(
+        (unitsResponse as any[]).filter(
+          (unit: Unit) => typeof unit.lat === "number" && Number.isFinite(unit.lat) && typeof unit.lng === "number" && Number.isFinite(unit.lng),
+        ),
+      )
     } catch (err) {
       console.error("[v0] Failed to load map data:", err)
     } finally {
@@ -72,20 +77,29 @@ export function IncidentMap() {
     }
   }
 
+  // 1) Carga Leaflet solo en cliente
   useEffect(() => {
-    setMounted(true)
-    // Dynamically import leaflet only on client and store it in a ref
     ;(async () => {
       try {
-        leafletRef.current = (await import("leaflet")).default
-        // Optionally, fix leaflet's icon URLs or any setup here if required
+        const mod = (await import("leaflet")).default
+        setL(mod)
       } catch (err) {
         console.warn("[v0] Failed to load leaflet dynamically:", err)
       }
-
-      // After attempting to load leaflet, load map data
-      loadMapData()
     })()
+  }, [])
+
+  // 2) Limpia cualquier mapa viejo dejado por HMR/StrictMode y habilita montaje
+  useEffect(() => {
+    if (!wrapperRef.current) return
+    wrapperRef.current.querySelectorAll(".leaflet-container").forEach((n) => n.remove())
+    setCanMountMap(true)
+  }, [])
+
+  // 3) Carga datos y suscripciones cuando se puede montar
+  useEffect(() => {
+    if (!canMountMap) return
+    loadMapData()
     subscribeToOps()
 
     const handleNewIncident = (data: {
@@ -153,18 +167,18 @@ export function IncidentMap() {
       )
     }
 
-  on("incidents:new", handleNewIncident)
-  on("incidents:update", handleIncidentUpdate)
-  on("incident:update", handleIncidentUpdate)
-  on("units:update", handleUnitUpdate)
+  on("incidents:new", handleNewIncident as any)
+  on("incidents:update", handleIncidentUpdate as any)
+  on("incident:update", handleIncidentUpdate as any)
+  on("units:update", handleUnitUpdate as any)
 
     return () => {
-      off("incidents:new", handleNewIncident)
-      off("incidents:update", handleIncidentUpdate)
-      off("incident:update", handleIncidentUpdate)
-      off("units:update", handleUnitUpdate)
+      off("incidents:new", handleNewIncident as any)
+      off("incidents:update", handleIncidentUpdate as any)
+      off("incident:update", handleIncidentUpdate as any)
+      off("units:update", handleUnitUpdate as any)
     }
-  }, [on, off, subscribeToOps])
+  }, [canMountMap, on, off, subscribeToOps])
 
   const getIncidentColor = (status: IncidentStatus, priority?: number) => {
     if (status === "NEW") {
@@ -191,7 +205,7 @@ export function IncidentMap() {
     }
   }
 
-  if (loading || !leafletRef.current) {
+  if (loading || !L || !canMountMap) {
     return (
       <Card className="glass-card h-96">
         <CardHeader>
@@ -210,7 +224,6 @@ export function IncidentMap() {
     )
   }
 
-  if (!mounted) return null
   return (
     <Card className="glass-card">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -237,8 +250,8 @@ export function IncidentMap() {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="h-96 rounded-b-2xl overflow-hidden">
-          <MapContainer center={defaultCenter} zoom={12} style={{ height: "100%", width: "100%" }}>
+        <div ref={wrapperRef} className="h-96 rounded-b-2xl overflow-hidden">
+          <MapContainer key="panic-map" center={defaultCenter} zoom={12} style={{ height: "100%", width: "100%" }}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -246,7 +259,6 @@ export function IncidentMap() {
 
             {/* Incident Markers */}
             {incidents.map((incident) => {
-              const L = leafletRef.current
               const icon =
                 L && typeof L.divIcon === "function"
                   ? L.divIcon({
@@ -256,6 +268,8 @@ export function IncidentMap() {
                       iconAnchor: [10, 10],
                     })
                   : undefined
+
+              if (!Number.isFinite(incident.lat) || !Number.isFinite(incident.lng)) return null
 
               return (
                 <Marker key={incident.id} position={[incident.lat, incident.lng]} icon={icon as any}>
@@ -274,7 +288,6 @@ export function IncidentMap() {
             {/* Unit Markers */}
             {showUnits &&
               units.map((unit) => {
-                const L = leafletRef.current
                 const icon =
                   L && typeof L.divIcon === "function"
                     ? L.divIcon({
@@ -285,8 +298,12 @@ export function IncidentMap() {
                       })
                     : undefined
 
+                if (!(typeof unit.lat === "number" && Number.isFinite(unit.lat) && typeof unit.lng === "number" && Number.isFinite(unit.lng))) {
+                  return null
+                }
+
                 return (
-                  <Marker key={`unit-${unit.id}`} position={[unit.lat!, unit.lng!]} icon={icon as any}>
+                  <Marker key={`unit-${unit.id}`} position={[unit.lat, unit.lng]} icon={icon as any}>
                     <Popup>
                       <div className="text-sm">
                         <p className="font-semibold">{unit.name}</p>
