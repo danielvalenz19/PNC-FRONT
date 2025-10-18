@@ -22,6 +22,41 @@ const ACTIVE = new Set(["NEW", "ACK", "DISPATCHED", "IN_PROGRESS", "RECOGNIZED",
 // Avoid SSR for Leaflet usage
 const NoSSR = dynamic(() => Promise.resolve(({ children }: any) => children), { ssr: false })
 
+// Color por estado/prioridad
+function incidentColor(status?: string, priority?: number) {
+  const s = String(status || "").toUpperCase()
+  if (s === "NEW") return priority && priority >= 3 ? "#dc2626" : "#ef4444" // rojos
+  if (s === "ACK") return "#f59e0b" // ámbar
+  if (s === "DISPATCHED") return "#3b82f6" // azul
+  if (s === "IN_PROGRESS") return "#8b5cf6" // violeta
+  return "#6b7280" // gris
+}
+
+// SVG del pin (bonito) con degradado y puntito central
+function incidentPinHTML(color: string, label?: string) {
+  const safeLabel = label ? String(label) : "!"
+  return `
+  <div class="leaflet-incident-pin" style="--pin-color:${color}">
+    <svg viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stop-color="${color}" stop-opacity="1"/>
+          <stop offset="100%" stop-color="${color}" stop-opacity=".85"/>
+        </linearGradient>
+      </defs>
+      <!-- pin con borde blanco -->
+      <path d="M18 1.5c-7.18 0-13 5.82-13 13 0 9.75 13 28 13 28s13-18.25 13-28c0-7.18-5.82-13-13-13z"
+            fill="url(#g)" stroke="white" stroke-width="2" />
+      <!-- aro/blanco + centro con el color -->
+      <circle cx="18" cy="16" r="7" fill="white" />
+      <circle cx="18" cy="16" r="4.5" fill="${color}"/>
+      <!-- etiqueta corta (¡, prioridad o lo que quieras) -->
+      <text x="18" y="41" text-anchor="middle" font-size="10" fill="white" font-weight="700">${safeLabel}</text>
+    </svg>
+    <span class="pulse"></span>
+  </div>`
+}
+
 export default function MapRealtime() {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<any>(null)
@@ -104,9 +139,23 @@ export default function MapRealtime() {
       const [lat, lng] = pickLatLng(inc)
       if (lat == null || lng == null) return
       points.push([lat, lng])
-      Llib.marker([lat, lng], {
-        title: inc?.id ?? "incidente",
-      }).addTo(mapRef.current._layerGroup)
+
+      const color = incidentColor(inc?.status, inc?.priority)
+      const icon = Llib.divIcon({
+        className: "",
+        html: incidentPinHTML(color, inc?.priority ? String(inc.priority) : "!"),
+        iconSize: [36, 44],
+        iconAnchor: [18, 44],
+        popupAnchor: [0, -38],
+      })
+
+      Llib.marker([lat, lng], { icon, title: inc?.id ?? "incidente" })
+        .addTo(mapRef.current._layerGroup)
+        .bindPopup(`<div style="font: 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto">
+          <strong>Incidente ${inc?.id ?? ""}</strong><br/>
+          Estado: ${inc?.status ?? "N/A"}${inc?.priority ? ` · Prioridad ${inc.priority}` : ""}<br/>
+          ${lat.toFixed(4)}, ${lng.toFixed(4)}
+        </div>`)
     })
 
     // centra/ajusta vista
@@ -138,4 +187,3 @@ export default function MapRealtime() {
     </Card>
   )
 }
-
