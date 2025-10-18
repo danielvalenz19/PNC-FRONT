@@ -288,7 +288,14 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
                   <div>
                     <h3 className="font-semibold text-lg">{unit.name}</h3>
                     <p className="text-sm text-muted-foreground">{unit.type}</p>
-                    {unit.plate && <p className="text-xs text-muted-foreground">Placa: {unit.plate}</p>}
+                    {unit.plate && (
+                      <div className="mt-1">
+                        <span className="text-sm text-muted-foreground">Placa</span>{" "}
+                        <span className="inline-block rounded border border-slate-300 bg-white/80 px-2 py-0.5 font-mono text-xs">
+                          {unit.plate.toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className={getStatusColor(unit.status)}>

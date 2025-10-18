@@ -301,6 +301,10 @@ class ApiClient {
     })
   }
 
+  async getUnitDetail(id: string) {
+    return this.request(API_ENDPOINTS.OPS_UNIT_DETAIL(id))
+  }
+
   async getKPIs(from?: string, to?: string) {
     const searchParams = new URLSearchParams()
     if (from) searchParams.append("from", from)

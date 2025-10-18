@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { apiClient } from "@/lib/api"
+import { apiClient } from "@/lib/api-client"
 import type { UnitStatus } from "@/lib/config"
 import { Car, Save, X } from "lucide-react"
 
@@ -80,16 +80,16 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
   const isEditing = !!unit
 
   useEffect(() => {
-    if (unit) {
+    setError(null)
+    if (unit && open) {
       setFormData({
-        name: unit.name,
-        // Translate API value to Spanish label
+        name: unit.name ?? "",
         type:
           TYPE_API_TO_LABEL[(unit.type as keyof typeof TYPE_API_TO_LABEL) ?? "patrol"] ??
           "Patrulla",
-        plate: unit.plate || "",
-        active: unit.active,
-        status: unit.status,
+        plate: (unit.plate ?? "").toUpperCase(),
+        active: !!unit.active,
+        status: unit.status as UnitStatus,
       })
     } else {
       setFormData({
@@ -99,7 +99,6 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
         active: true,
       })
     }
-    setError(null)
   }, [unit, open])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -129,9 +128,9 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
       }
 
       if (isEditing && unit) {
-        await apiClient.updateUnit(unit.id, payload)
+        await apiClient.patch(`/ops/units/${unit.id}`, payload)
       } else {
-        await apiClient.createUnit(payload)
+        await apiClient.post(`/ops/units`, payload)
       }
 
       onSave()
@@ -201,7 +200,9 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
             <Input
               id="plate"
               value={formData.plate}
-              onChange={(e) => setFormData({ ...formData, plate: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, plate: e.target.value.toUpperCase() })
+              }
               placeholder="Ej: P-12345"
               className="bg-input/40 backdrop-blur-sm"
             />
