@@ -268,7 +268,9 @@ class ApiClient {
     }
 
     const endpoint = `${API_ENDPOINTS.OPS_UNITS}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`
-    return this.request<any[]>(endpoint)
+    const result = await this.request<any>(endpoint)
+    // Accept both array and { items: [] }
+    return Array.isArray(result) ? result : result?.items ?? []
   }
 
   async createUnit(data: {

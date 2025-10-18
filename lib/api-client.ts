@@ -217,7 +217,7 @@ export class ApiClient {
     return this.get(`/api/v1/ops/incidents${qs}`)
   }
 
-  getUnits(params?: { status?: string; type?: string }): Promise<any[]> {
+  async getUnits(params?: { status?: string; type?: string }): Promise<any[]> {
     // Normalize status and omit invalid values
     const p: Record<string, string> = {}
     if (params?.status) {
@@ -226,7 +226,8 @@ export class ApiClient {
     }
     if (params?.type) p.type = String(params.type)
     const qs = this.buildQuery(p)
-    return this.get(`/api/v1/ops/units${qs}`)
+    const result = await this.get<any>(`/api/v1/ops/units${qs}`)
+    return Array.isArray(result) ? result : result?.items ?? []
   }
 
   getKPIs(from?: string, to?: string) {

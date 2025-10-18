@@ -47,7 +47,18 @@ interface UnitFormData {
   status?: UnitStatus
 }
 
-const unitTypes = ["Patrulla", "Motocicleta", "Ambulancia", "Bomberos", "Rescate", "Comando", "Apoyo"]
+// Map Spanish labels <-> API values supported by backend
+const TYPE_LABEL_TO_API = {
+  Patrulla: "patrol",
+  Motocicleta: "moto",
+  Ambulancia: "ambulance",
+} as const
+
+const TYPE_API_TO_LABEL = {
+  patrol: "Patrulla",
+  moto: "Motocicleta",
+  ambulance: "Ambulancia",
+} as const
 
 const statusOptions: { value: UnitStatus; label: string }[] = [
   { value: "AVAILABLE", label: "Disponible" },
@@ -59,7 +70,7 @@ const statusOptions: { value: UnitStatus; label: string }[] = [
 export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
   const [formData, setFormData] = useState<UnitFormData>({
     name: "",
-    type: "",
+    type: "Patrulla",
     plate: "",
     active: true,
   })
@@ -72,7 +83,10 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
     if (unit) {
       setFormData({
         name: unit.name,
-        type: unit.type,
+        // Translate API value to Spanish label
+        type:
+          TYPE_API_TO_LABEL[(unit.type as keyof typeof TYPE_API_TO_LABEL) ?? "patrol"] ??
+          "Patrulla",
         plate: unit.plate || "",
         active: unit.active,
         status: unit.status,
@@ -80,7 +94,7 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
     } else {
       setFormData({
         name: "",
-        type: "",
+        type: "Patrulla",
         plate: "",
         active: true,
       })
@@ -102,10 +116,16 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
 
       const payload = {
         name: formData.name.trim(),
-        type: formData.type.trim(),
+        // Map label to API value expected by backend
+        type: TYPE_LABEL_TO_API[formData.type as keyof typeof TYPE_LABEL_TO_API],
         plate: formData.plate.trim() || undefined,
-        active: formData.active,
-        ...(isEditing && formData.status && { status: formData.status }),
+        // Ensure boolean
+        active: !!formData.active,
+      } as {
+        name: string
+        type: "patrol" | "moto" | "ambulance"
+        plate?: string
+        active: boolean
       }
 
       if (isEditing && unit) {
@@ -169,11 +189,9 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
                 <SelectValue placeholder="Seleccionar tipo" />
               </SelectTrigger>
               <SelectContent className="glass-card border-border/25">
-                {unitTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
+                <SelectItem value="Patrulla">Patrulla</SelectItem>
+                <SelectItem value="Motocicleta">Motocicleta</SelectItem>
+                <SelectItem value="Ambulancia">Ambulancia</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { apiClient } from "@/lib/api"
 import { useSocket } from "@/hooks/use-socket"
-import type { UnitStatus } from "@/lib/config"
 import { Car, Activity, AlertTriangle, Wrench } from "lucide-react"
 
 interface UnitStats {
@@ -33,16 +32,19 @@ export function UnitStats({ refreshTrigger }: UnitStatsProps) {
   const loadStats = async () => {
     try {
       setLoading(true)
-      const units = await apiClient.getUnits({})
+      const resp: any = await apiClient.getUnits()
+      const units: any[] = Array.isArray(resp) ? resp : resp?.items ?? []
 
       const activeUnits = units.filter((unit: { active: boolean }) => unit.active)
 
       const newStats: UnitStats = {
         total: activeUnits.length,
-        available: activeUnits.filter((unit: { status: UnitStatus }) => unit.status === "AVAILABLE").length,
-        busy: activeUnits.filter((unit: { status: UnitStatus }) => unit.status === "BUSY").length,
-        offline: activeUnits.filter((unit: { status: UnitStatus }) => unit.status === "OFFLINE").length,
-        maintenance: activeUnits.filter((unit: { status: UnitStatus }) => unit.status === "MAINTENANCE").length,
+        // Backend uses lowercase tokens: available, en_route, on_site, out_of_service
+        available: activeUnits.filter((unit: { status: string }) => unit.status === "available").length,
+        busy: activeUnits.filter((unit: { status: string }) => ["en_route", "on_site"].includes(unit.status)).length,
+        // Not displayed, keep as 0 unless a separate state is introduced
+        offline: 0,
+        maintenance: activeUnits.filter((unit: { status: string }) => unit.status === "out_of_service").length,
       }
 
       setStats(newStats)
