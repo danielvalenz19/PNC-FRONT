@@ -94,17 +94,24 @@ export function IncidentDetail({ incidentId }: IncidentDetailProps) {
   const [noteText, setNoteText] = useState("")
 
   const loadIncidentDetail = async () => {
+    setLoading(true)
+    setError(null)
     try {
-      setLoading(true)
-      setError(null)
-
-      const [incidentResponse, unitsResponse] = await Promise.all([
-        apiClient.getIncidentDetail(incidentId),
-        apiClient.getUnits({ status: "AVAILABLE,BUSY" }),
-      ])
-
+      // 1) Siempre traer el detalle del incidente
+      const incidentResponse = await apiClient.getIncidentDetail(incidentId)
       setIncident(incidentResponse)
-      setUnits(unitsResponse.filter((unit: Unit) => unit.status === "AVAILABLE"))
+
+      // 2) Intentar cargar unidades disponibles (sin romper el detalle si falla)
+      try {
+        const unitsResponse = await apiClient.getUnits({ status: "available" })
+        const arr = Array.isArray(unitsResponse)
+          ? unitsResponse
+          : (unitsResponse as any)?.items ?? []
+        setUnits(arr as Unit[])
+      } catch (e) {
+        console.warn("No se pudo cargar unidades, sigo con el detalle", e)
+        setUnits([])
+      }
     } catch (err) {
       setError("Error al cargar el detalle del incidente")
       console.error("[v0] Failed to load incident detail:", err)
@@ -468,8 +475,10 @@ export function IncidentDetail({ incidentId }: IncidentDetailProps) {
                 <div>
                   <p className="text-sm font-medium">Ubicación Actual</p>
                   <p className="text-xs text-muted-foreground">
-                    {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
-                    {currentLocation.accuracy && ` (±${currentLocation.accuracy}m)`}
+                    {Number.isFinite(Number(currentLocation.lat)) && Number.isFinite(Number(currentLocation.lng))
+                      ? `${Number(currentLocation.lat).toFixed(4)}, ${Number(currentLocation.lng).toFixed(4)}`
+                      : "Sin ubicación"}
+                    {Number.isFinite(Number(currentLocation.accuracy)) && ` (±${Number(currentLocation.accuracy)}m)`}
                   </p>
                 </div>
               </div>

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { RouteGuard } from "@/components/auth/route-guard"
 import { AdminLayout } from "@/components/layout/admin-layout"
 import { IncidentDetail } from "@/components/incidents/incident-detail"

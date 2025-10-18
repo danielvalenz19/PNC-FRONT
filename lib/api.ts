@@ -1,4 +1,5 @@
 import { API_CONFIG, API_ENDPOINTS, REQUEST_HEADERS, AUTH_CONFIG } from "./config"
+import { normalizeUnitStatus } from "./status"
 
 class ApiClient {
   private baseURL: string
@@ -259,12 +260,11 @@ class ApiClient {
 
   async getUnits(params?: { status?: string; type?: string }) {
     const searchParams = new URLSearchParams()
+
     if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          searchParams.append(key, value)
-        }
-      })
+      const normalized = normalizeUnitStatus(params.status ?? null)
+      if (normalized) searchParams.append("status", normalized)
+      if (params.type) searchParams.append("type", String(params.type))
     }
 
     const endpoint = `${API_ENDPOINTS.OPS_UNITS}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`

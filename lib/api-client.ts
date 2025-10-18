@@ -1,4 +1,5 @@
 import { API_CONFIG } from "./config"
+import { normalizeUnitStatus } from "./status"
 import { AuthManager } from "./auth"
 
 export class ApiClient {
@@ -217,7 +218,14 @@ export class ApiClient {
   }
 
   getUnits(params?: { status?: string; type?: string }): Promise<any[]> {
-    const qs = this.buildQuery(params)
+    // Normalize status and omit invalid values
+    const p: Record<string, string> = {}
+    if (params?.status) {
+      const normalized = normalizeUnitStatus(params.status)
+      if (normalized) p.status = normalized
+    }
+    if (params?.type) p.type = String(params.type)
+    const qs = this.buildQuery(p)
     return this.get(`/api/v1/ops/units${qs}`)
   }
 
