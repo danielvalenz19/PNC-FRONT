@@ -1,86 +1,108 @@
-"use client"
+﻿"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { apiClient } from "@/lib/api-client"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
-import { TrendingUp } from "lucide-react"
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { apiClient } from "@/lib/api-client";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { TrendingUp } from "lucide-react";
 
-interface ResponseTimeData {
-  date: string
-  ttr_avg: number
-  tta_avg: number
-  incidents_count: number
+interface RawRow {
+  date?: string; day?: string; bucket?: string; ts?: string;
+  ttr_avg?: number | string; ttr_p50?: number | string; ttr?: number | string; response?: number | string;
+  tta_avg?: number | string; tta_p50?: number | string; tta?: number | string; arrival?: number | string;
+  incidents_count?: number;
 }
 
-interface ResponseTimeChartProps {
-  dateRange: {
-    from: string
-    to: string
+interface Row {
+  date: string;
+  ttr_avg: number;   // segundos
+  tta_avg: number;   // segundos
+  incidents_count: number;
+}
+
+interface Props { dateRange: { from: string; to: string } }
+
+// helpers
+const toSeconds = (v: unknown): number => {
+  if (v == null) return 0;
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  const s = String(v).trim();
+  if (/^\d+(\.\d+)?$/.test(s)) return Number(s);
+  const m = s.match(/(-?\d+(?:\.\d+)?)(s|m|h)$/i);
+  if (m) {
+    const n = parseFloat(m[1]); const u = m[2].toLowerCase();
+    if (u === "h") return n * 3600;
+    if (u === "m") return n * 60;
+    return n;
   }
-}
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+};
 
-export function ResponseTimeChart({ dateRange }: ResponseTimeChartProps) {
-  const [data, setData] = useState<ResponseTimeData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+const fmtTime = (seconds: number) => {
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+  return `${Math.round(seconds / 3600)}h`;
+};
 
-  const loadChartData = async () => {
+const fmtDate = (d: string) => new Date(d).toLocaleDateString("es-ES", { month: "short", day: "numeric" });
+
+// colores con fallback (si no existen las CSS vars o están en HSL sin hsl())
+const cssColor = (name: string, fallback: string) => {
+  if (typeof window === "undefined") return fallback;
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  if (!raw) return fallback;
+  if (/^\d+(?:\.\d+)?\s+\d+(?:\.\d+)?%\s+\d+(?:\.\d+)?%$/.test(raw)) return `hsl(${raw})`;
+  return raw;
+};
+
+export function ResponseTimeChart({ dateRange }: Props) {
+  const [data, setData] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true); setError(null);
 
-      const params = new URLSearchParams()
-      params.set("from", dateRange.from)
-      params.set("to", dateRange.to)
-      params.set("group_by", "day")
+      const from = new Date(`${dateRange.from}T00:00:00`);
+      const to   = new Date(`${dateRange.to}T23:59:59.999`);
 
-  const response = await apiClient.get<ResponseTimeData[]>(`/ops/reports/response-times?${params.toString()}`)
-      setData(response)
-    } catch (err) {
-      setError("Error al cargar datos del gráfico")
-      console.error("Failed to load chart data:", err)
+      const raw = (await apiClient.getReportsResponseTimes(from.toISOString(), to.toISOString(), "day")) as unknown as RawRow[] | { items: RawRow[] };
+      const arr: RawRow[] = Array.isArray(raw) ? raw : (raw?.items ?? []);
+
+      const mapped: Row[] = arr.map((r) => ({
+        date: r.bucket ?? r.date ?? r.day ?? r.ts ?? new Date().toISOString(),
+        ttr_avg: toSeconds(r.ttr_avg ?? r.ttr_p50 ?? r.ttr ?? r.response ?? 0),
+        tta_avg: toSeconds(r.tta_avg ?? r.tta_p50 ?? r.tta ?? r.arrival ?? 0),
+        incidents_count: Number(r.incidents_count ?? 0),
+      }));
+
+      setData(mapped);
+    } catch (e) {
+      console.error("reports/response-times error:", e);
+      setError("No se pudo cargar la tendencia");
+      setData([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  useEffect(() => {
-    loadChartData()
-  }, [dateRange])
-
-  const formatTime = (seconds: number) => {
-    if (seconds < 60) return `${Math.round(seconds)}s`
-    if (seconds < 3600) return `${Math.round(seconds / 60)}m`
-    return `${Math.round(seconds / 3600)}h`
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
-      month: "short",
-      day: "numeric",
-    })
-  }
+  useEffect(() => { load(); }, [dateRange]);
 
   if (loading) {
     return (
       <Card className="glass-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            Tendencia de Tiempos de Respuesta
+            <TrendingUp className="w-5 h-5" /> Tendencia de Tiempos de Respuesta
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Cargando gráfico...</p>
-            </div>
-          </div>
+          <div className="h-80 grid place-items-center text-muted-foreground">Cargando…</div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error || data.length === 0) {
@@ -88,82 +110,49 @@ export function ResponseTimeChart({ dateRange }: ResponseTimeChartProps) {
       <Card className="glass-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            Tendencia de Tiempos de Respuesta
+            <TrendingUp className="w-5 h-5" /> Tendencia de Tiempos de Respuesta
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80 flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <TrendingUp className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>{error || "No hay datos disponibles para el rango seleccionado"}</p>
-            </div>
+          <div className="h-80 grid place-items-center text-muted-foreground">
+            {error ?? "No hay datos en el rango seleccionado"}
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
+
+  const colorResp = cssColor("--chart-1", "#2563eb");
+  const colorArrv = cssColor("--chart-2", "#16a34a");
 
   return (
     <Card className="glass-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5" />
-          Tendencia de Tiempos de Respuesta
+          <TrendingUp className="w-5 h-5" /> Tendencia de Tiempos de Respuesta
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={formatDate}
-                stroke="#111"
-                tick={{ fill: "#111", fontSize: 12 }}
-              />
-              <YAxis
-                tickFormatter={formatTime}
-                stroke="#111"
-                tick={{ fill: "#111", fontSize: 12 }}
-              />
+            <LineChart data={data} margin={{ top: 8, right: 12, left: 8, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" tickFormatter={fmtDate} />
+              <YAxis tickFormatter={fmtTime} />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "#fff",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "8px",
-                  color: "#111",
-                }}
-                labelFormatter={(label) => `Fecha: ${formatDate(label)}`}
-                formatter={(value: number, name: string) => [
-                  formatTime(value),
-                  name === "ttr_avg" ? "Tiempo de Respuesta" : "Tiempo de Llegada",
+                labelFormatter={(l) => `Fecha: ${fmtDate(String(l))}`}
+                formatter={(v: any, key) => [
+                  fmtTime(Number(v)),
+                  key === "ttr_avg" ? "Tiempo de Respuesta" : "Tiempo de Llegada",
                 ]}
               />
-              <Legend wrapperStyle={{ color: "#111" }} />
-              <Line
-                type="monotone"
-                dataKey="ttr_avg"
-                stroke="#000"
-                strokeWidth={2}
-                dot={{ fill: "#000", stroke: "#000", strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 5, stroke: "#000" }}
-                name="Tiempo de Respuesta"
-              />
-              <Line
-                type="monotone"
-                dataKey="tta_avg"
-                stroke="#000"
-                strokeWidth={2}
-                dot={{ fill: "#000", stroke: "#000", strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 5, stroke: "#000" }}
-                name="Tiempo de Llegada"
-              />
+              <Legend />
+              <Line type="monotone" dataKey="tta_avg" name="Tiempo de Llegada" stroke={colorArrv} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="ttr_avg" name="Tiempo de Respuesta" stroke={colorResp} strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -237,6 +237,17 @@ export class ApiClient {
     const qs = p.toString() ? `?${p.toString()}` : ""
     return this.get(`/api/v1/ops/reports/kpis${qs}`)
   }
+
+  // Response times series (requires from/to in ISO8601)
+  async getReportsResponseTimes(
+    from: string,
+    to: string,
+    groupBy: "day" | "week" | "month" = "day",
+  ) {
+    const qs = new URLSearchParams({ from, to, group_by: groupBy })
+    // Use ops path; request() will ensure /api/v1 prefix
+    return this.get(`/ops/reports/response-times?${qs.toString()}`)
+  }
 }
 
 export const apiClient = ApiClient.getInstance()
