@@ -6,11 +6,8 @@ import { AdminLayout } from "@/components/layout/admin-layout"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { IncidentQueue } from "@/components/dashboard/incident-queue"
 
-// Load IncidentMap client-side only to avoid Leaflet SSR errors
-const IncidentMap = dynamic(
-  () => import("@/components/dashboard/incident-map").then((m) => m.IncidentMap),
-  { ssr: false },
-)
+// Load MapRealtime client-side only to avoid Leaflet SSR errors
+const MapRealtime = dynamic(() => import("@/components/dashboard/MapRealtime"), { ssr: false })
 
 export default function DashboardPage() {
   return (
@@ -26,10 +23,11 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <IncidentQueue />
-            <IncidentMap />
+            <MapRealtime />
           </div>
         </div>
       </AdminLayout>
     </RouteGuard>
   )
 }
+

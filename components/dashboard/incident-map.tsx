@@ -53,37 +53,43 @@ export function IncidentMap() {
     try {
       setLoading(true)
 
-      // Load active incidents
-      const incidentsResponse = await apiClient.getIncidents({
-        // Opción A: no enviar `status`, el backend listará por defecto
-        limit: 100,
-      })
+      // Incidentes activos
+      const respInc = await apiClient.getIncidents({ limit: 100 })
+      const itemsInc = Array.isArray(respInc) ? respInc : respInc?.items ?? []
       const ACTIVE = new Set(["NEW", "ACK", "DISPATCHED", "IN_PROGRESS"])
-      setIncidents(incidentsResponse.items.filter((i: any) => ACTIVE.has(i.status)))
+      setIncidents(itemsInc.filter((i: any) => ACTIVE.has(i.status)))
 
-      // Load units with location. Backend expects lowercase statuses and does not accept CSV lists.
-      const unitsResponse = await apiClient.getUnits()
-      const operativas = (unitsResponse as any[]).filter((u: any) => ["available", "en_route", "on_site"].includes(u.status))
+      // Unidades con geoloc (operativas)
+      const respUnits = await apiClient.getUnits()
+      const listUnits = Array.isArray(respUnits) ? respUnits : respUnits?.items ?? respUnits ?? []
+      const operativas = (listUnits as any[]).filter((u: any) => ["available", "en_route", "on_site"].includes(u.status))
       setUnits(
         operativas.filter(
-          (unit: Unit) => typeof unit.lat === "number" && Number.isFinite(unit.lat) && typeof unit.lng === "number" && Number.isFinite(unit.lng),
+          (u: any) =>
+            typeof u.lat === "number" && Number.isFinite(u.lat) && typeof u.lng === "number" && Number.isFinite(u.lng),
         ),
       )
     } catch (err) {
-      console.error("[v0] Failed to load map data:", err)
+      console.error("[map] Failed to load map data:", err)
+      // No rompas el mapa si un fetch falla
+      setIncidents([])
+      setUnits([])
     } finally {
       setLoading(false)
     }
   }
 
-  // 1) Carga Leaflet solo en cliente
+  // 1) Carga Leaflet solo en cliente (lib + CSS)
   useEffect(() => {
     ;(async () => {
       try {
-        const mod = (await import("leaflet")).default
-        setL(mod)
+        const mod = await import("leaflet")
+        await import("leaflet/dist/leaflet.css")
+        setL(mod as any)
       } catch (err) {
-        console.warn("[v0] Failed to load leaflet dynamically:", err)
+        console.warn("[map] Failed to load leaflet dynamically:", err)
+        // No bloquees el render si L falla
+        setL({} as any)
       }
     })()
   }, [])
@@ -166,10 +172,10 @@ export function IncidentMap() {
       )
     }
 
-  on("incidents:new", handleNewIncident as any)
-  on("incidents:update", handleIncidentUpdate as any)
-  on("incident:update", handleIncidentUpdate as any)
-  on("units:update", handleUnitUpdate as any)
+    on("incidents:new", handleNewIncident as any)
+    on("incidents:update", handleIncidentUpdate as any)
+    on("incident:update", handleIncidentUpdate as any)
+    on("units:update", handleUnitUpdate as any)
 
     return () => {
       off("incidents:new", handleNewIncident as any)
@@ -204,7 +210,7 @@ export function IncidentMap() {
     }
   }
 
-  if (loading || !L || !canMountMap) {
+  if (loading || !canMountMap) {
     return (
       <Card className="glass-card h-96">
         <CardHeader>
@@ -308,9 +314,7 @@ export function IncidentMap() {
                         <p className="font-semibold">{unit.name}</p>
                         <p>Estado: {unit.status}</p>
                         {unit.last_seen && (
-                          <p className="text-xs text-gray-600">
-                            Última actualización: {new Date(unit.last_seen).toLocaleString("es-ES")}
-                          </p>
+                          <p className="text-xs text-gray-600">Última actualización: {new Date(unit.last_seen).toLocaleString("es-ES")}</p>
                         )}
                       </div>
                     </Popup>
