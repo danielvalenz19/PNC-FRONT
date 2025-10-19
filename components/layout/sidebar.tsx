@@ -56,6 +56,18 @@ const navigationItems = [
     roles: ["admin"],
   },
   {
+    name: "Ciudadanos",
+    href: "/personas/ciudadanos",
+    icon: Users,
+    roles: ["admin", "supervisor"],
+  },
+  {
+    name: "Ciudadanos · Listado",
+    href: "/personas/ciudadanos/listado",
+    icon: Users,
+    roles: ["admin", "supervisor"],
+  },
+  {
     name: "Configuración",
     href: "/settings",
     icon: Settings,
