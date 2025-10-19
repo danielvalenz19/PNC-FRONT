@@ -15,7 +15,14 @@ export async function listCitizens(params: { q?: string; status?: 'active'|'inac
 }
 
 export async function updateCitizenStatus(id: number, status: 'active'|'inactive') {
-  return apiClient.patch(`/ops/citizens/${id}/status`, { status });
+  try {
+    return await apiClient.patch(`/ops/citizens/${id}/status`, { status });
+  } catch (e: any) {
+    const is404 = typeof e?.message === 'string' && /HTTP\s+404/.test(e.message)
+    if (!is404) throw e
+    const action = status === 'inactive' ? 'block' : 'unblock'
+    return apiClient.patch(`/ops/citizens/${id}/${action}`)
+  }
 }
 
 export async function getCitizen(id: number) {

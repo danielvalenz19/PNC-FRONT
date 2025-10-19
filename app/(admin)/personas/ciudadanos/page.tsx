@@ -66,21 +66,32 @@ function TopKPIsAndChart() {
     );
   }
 
-  const n = (v: number) => v?.toLocaleString('es-GT');
+  // Normalize possible API shapes to avoid runtime errors when kpis is missing
+  const kraw = data?.kpis ?? data?.data?.kpis ?? {};
+  const safe = {
+    total: Number(kraw.total_ciudadanos ?? data?.total_ciudadanos ?? data?.total ?? 0) || 0,
+    activos: Number(kraw.ciudadanos_activos ?? data?.ciudadanos_activos ?? data?.activos ?? 0) || 0,
+    bloqueados: Number(
+      kraw.ciudadanos_bloqueados ?? data?.ciudadanos_bloqueados ?? data?.bloqueados ?? data?.blocked ?? 0,
+    ) || 0,
+    nuevos30: Number(kraw.nuevos_30d ?? data?.nuevos_30d ?? data?.new_30d ?? data?.nuevos ?? 0) || 0,
+    series: (data?.series ?? data?.data?.series ?? data?.items ?? []) as any[],
+  };
+  const n = (v: number) => (Number.isFinite(v) ? v : 0).toLocaleString('es-GT');
 
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Kpi title="Total" value={n(data.kpis.total_ciudadanos)} />
-        <Kpi title="Activos" value={n(data.kpis.ciudadanos_activos)} />
-        <Kpi title="Bloqueados" value={n(data.kpis.ciudadanos_bloqueados)} />
-        <Kpi title="Nuevos (30d)" value={n(data.kpis.nuevos_30d)} />
+        <Kpi title="Total" value={n(safe.total)} />
+        <Kpi title="Activos" value={n(safe.activos)} />
+        <Kpi title="Bloqueados" value={n(safe.bloqueados)} />
+        <Kpi title="Nuevos (30d)" value={n(safe.nuevos30)} />
       </div>
 
       <Card className="glass-card">
         <CardHeader><CardTitle>Crecimiento diario</CardTitle></CardHeader>
         <CardContent>
-          <AreaCitizens data={data.series} xKey="d" yKey="n" y2Key="acumulado" />
+          <AreaCitizens data={safe.series} xKey="d" yKey="n" y2Key="acumulado" />
         </CardContent>
       </Card>
     </>
@@ -244,4 +255,3 @@ function CitizenTable() {
     </>
   );
 }
-
