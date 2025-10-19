@@ -7,6 +7,8 @@ import { getCitizen, updateCitizen, updateCitizenStatus } from "@/lib/api/citize
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 export default function CiudadanoPerfilPage() {
   const params = useParams<{ id: string }>();
@@ -14,7 +16,8 @@ export default function CiudadanoPerfilPage() {
   const id = Number(params.id);
 
   const [data, setData] = useState<any>(null);
-  const [form, setForm] = useState<any>({ name: "", email: "", phone: "", address: "" });
+  const [editOpen, setEditOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
 
   const load = () => {
     getCitizen(id)
@@ -34,6 +37,7 @@ export default function CiudadanoPerfilPage() {
 
   const save = async () => {
     await updateCitizen(id, form);
+    setEditOpen(false);
     load();
   };
 
@@ -47,11 +51,7 @@ export default function CiudadanoPerfilPage() {
     return (
       <RouteGuard allowedRoles={["admin", "supervisor"]}>
         <AdminLayout>
-          <div className="space-y-6">
-            <Card className="glass-card">
-              <CardContent className="p-6">Cargando…</CardContent>
-            </Card>
-          </div>
+          <Card className="glass-card"><CardContent className="p-6">Cargando…</CardContent></Card>
         </AdminLayout>
       </RouteGuard>
     );
@@ -62,31 +62,21 @@ export default function CiudadanoPerfilPage() {
       <AdminLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground text-balance">Perfil del ciudadano</h1>
-            <p className="text-muted-foreground">Consulta y edita la información del ciudadano, y revisa sus incidentes recientes.</p>
+            <h1 className="text-3xl font-bold text-foreground">Perfil del ciudadano</h1>
+            <p className="text-muted-foreground">Consulta y edita información del ciudadano.</p>
           </div>
 
           <Card className="glass-card">
-            <CardHeader>
-              <CardTitle>Perfil del ciudadano</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+            <CardHeader><CardTitle>Datos</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Field label="Nombre">
-                  <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-                </Field>
-                <Field label="Email">
-                  <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                </Field>
-                <Field label="Teléfono">
-                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                </Field>
-                <Field label="Dirección">
-                  <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-                </Field>
+                <Field label="Nombre"   value={data.citizen?.name ?? "—"} />
+                <Field label="Correo"   value={data.citizen?.email ?? "—"} />
+                <Field label="Teléfono" value={data.citizen?.phone ?? "—"} />
+                <Field label="Dirección" value={data.citizen?.address ?? "—"} />
               </div>
               <div className="flex gap-2">
-                <Button onClick={save}>Guardar</Button>
+                <Button onClick={() => setEditOpen(true)}>Editar perfil</Button>
                 <Button variant="outline" onClick={toggleStatus}>
                   {data.citizen.status === "active" ? "Bloquear" : "Activar"}
                 </Button>
@@ -96,9 +86,7 @@ export default function CiudadanoPerfilPage() {
           </Card>
 
           <Card className="glass-card">
-            <CardHeader>
-              <CardTitle>Últimos incidentes</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Últimos incidentes</CardTitle></CardHeader>
             <CardContent>
               {data.incidents?.length ? (
                 <div className="overflow-auto">
@@ -125,23 +113,45 @@ export default function CiudadanoPerfilPage() {
                     </tbody>
                   </table>
                 </div>
-              ) : (
-                "Sin incidentes"
-              )}
+              ) : 'Sin incidentes'}
             </CardContent>
           </Card>
+
+          {/* Dialog de edición */}
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader><DialogTitle>Editar perfil</DialogTitle></DialogHeader>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1"><Label>Nombre</Label>
+                  <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+                </div>
+                <div className="space-y-1"><Label>Correo</Label>
+                  <Input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                </div>
+                <div className="space-y-1"><Label>Teléfono</Label>
+                  <Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+                </div>
+                <div className="space-y-1 md:col-span-2"><Label>Dirección</Label>
+                  <Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
+                <Button onClick={save}>Guardar cambios</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </AdminLayout>
     </RouteGuard>
   );
 }
 
-function Field({ label, children }: { label: string; children: any }) {
+function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-1">
       <div className="text-xs text-muted-foreground">{label}</div>
-      {children}
+      <div className="font-medium break-words">{value}</div>
     </div>
   );
 }
-

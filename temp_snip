@@ -1,0 +1,40 @@
+    listCitizens({ q: q || undefined, status, page, limit })
+      .then((res: any) => {
+        setRows(res.items);
+        setTotal(res.total);
+      })
+      .catch(console.error);
+  };
+
+  useEffect(load, [q, status, page]);
+
+  const toggleStatus = async (id: number, curr: 'active' | 'inactive') => {
+    await updateCitizenStatus(id, curr === 'active' ? 'inactive' : 'active');
+    load();
+  };
+
+  const submitCreate = async () => {
+    await createCitizen(createForm);
+    setCreateOpen(false);
+    setCreateForm({ name: "", email: "", phone: "", address: "", dpi: "", password: "" });
+    load();
+  };
+
+  return (
+    <Card className="glass-card">
+      <CardHeader><CardTitle>Listado</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        {/* Filtros */}
+        <div className="flex gap-2 flex-wrap items-center">
+          <Input placeholder="Buscar por nombre o email…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
+          <Select onValueChange={(v) => setStatus(v as any)} value={status}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Activos</SelectItem>
+              <SelectItem value="inactive">Bloqueados</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="secondary" onClick={() => { setQ(''); setStatus(undefined); setPage(1); }}>Limpiar</Button>
+          <div className="grow" />
+          <Button onClick={() => setCreateOpen(true)}>Crear ciudadano</Button>
+        </div>

@@ -56,3 +56,15 @@ export const updateUserRole = (
   role: "admin" | "supervisor" | "operator" | "unit" | "citizen",
 ) => apiClient.patch(`/admin/users/${id}/role`, { role })
 
+// Create citizen with default role 'citizen'
+export async function createCitizen(payload: {
+  name: string
+  email: string
+  phone?: string
+  address?: string
+  dpi?: string
+  password?: string
+}) {
+  const body = { ...payload, role: "citizen" as const }
+  return apiClient.post(`/admin/citizens`, body)
+}

@@ -1,0 +1,8 @@
+const load = () => {
+    listCitizens({ q: q || undefined, status, page, limit })
+      .then((res: any) => {
+        setRows(res.items);
+        setTotal(res.total);
+      })
+      .catch(console.error);
+  };
