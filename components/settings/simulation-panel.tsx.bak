@@ -11,10 +11,10 @@ import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
 import { apiClient } from "@/lib/api-client"
-import { Play, Square, Pause, PlayCircle } from "lucide-react"
-import { randomPointSamayac } from "@/lib/samayac-geo"
-import { useRouter } from "next/navigation"
+import { Play, Square, RotateCcw } from "lucide-react"
 import { useSocket } from "@/hooks/use-socket"
+import { useRouter } from "next/navigation"
+import { API_ENDPOINTS } from "@/lib/config"
 
 interface SimulationConfig {
   type: string
@@ -29,8 +29,7 @@ export function SimulationPanel() {
   const router = useRouter()
   const { subscribeToOps, on, off } = useSocket()
   const [loading, setLoading] = useState(false)
-  const [simId, setSimId] = useState<string | null>(null)
-  const [simStatus, setSimStatus] = useState<"IDLE" | "RUNNING" | "PAUSED">("IDLE")
+  const [isRunning, setIsRunning] = useState(false)
   const [config, setConfig] = useState<SimulationConfig>({
     type: "emergency",
     duration: 60,
@@ -39,14 +38,14 @@ export function SimulationPanel() {
     description: "",
   })
 
-  // Realtime: ops subscription for quick notification/navigation on new incidents
+  // Realtime: listen for incidents:new and provide quick navigation
   useEffect(() => {
     subscribeToOps()
 
-    const handleNew = (msg: { id: string; lat: number; lng: number }) => {
+    const handleNewIncident = (msg: { id: string; lat: number; lng: number }) => {
       toast({
         title: "Nueva emergencia",
-        description: `INC ${msg.id} - ${(+msg.lat).toFixed(5)}, ${(+msg.lng).toFixed(5)}`,
+        description: `INC ${msg.id} • ${(+msg.lat).toFixed(5)}, ${(+msg.lng).toFixed(5)}`,
         action: (
           <ToastAction altText="Ver" onClick={() => router.push(`/incidents/${msg.id}`)}>
             Ver incidente
@@ -55,9 +54,9 @@ export function SimulationPanel() {
       })
     }
 
-    on("incidents:new", handleNew as any)
+    on("incidents:new", handleNewIncident as any)
     return () => {
-      off("incidents:new", handleNew as any)
+      off("incidents:new", handleNewIncident as any)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -65,24 +64,14 @@ export function SimulationPanel() {
   const handleStartSimulation = async () => {
     setLoading(true)
     try {
-      const { lat, lng } = randomPointSamayac(3500)
-      const data = await apiClient.post<{ id: string; status: string }>("/simulations", {
-        lat,
-        lng,
-        accuracy: 12,
-        battery: 100,
-        device: { os: "web", version: "sim" },
-      })
-      setSimId(data.id)
-      setSimStatus("RUNNING")
+      const result = await apiClient.post<{ id?: string; lat?: number; lng?: number }>(
+        API_ENDPOINTS.SIMULATIONS,
+        config,
+      )
+      setIsRunning(true)
       toast({
-        title: "Nueva emergencia simulada",
-        description: `INC ${data.id} - ${lat.toFixed(5)}, ${lng.toFixed(5)}`,
-        action: (
-          <ToastAction altText="Ver" onClick={() => router.push(`/incidents/${data.id}`)}>
-            Ver incidente
-          </ToastAction>
-        ),
+        title: "Simulación iniciada",
+        description: "La simulación se está ejecutando",
       })
     } catch (error) {
       toast({
@@ -95,42 +84,41 @@ export function SimulationPanel() {
     }
   }
 
-  const handlePause = async () => {
-    if (!simId) return
-    setLoading(true)
-    try {
-      await apiClient.patch(`/simulations/${simId}/status`, { status: "PAUSED" })
-      setSimStatus("PAUSED")
-    } catch (error) {
-      toast({ title: "Error", description: "No se pudo pausar", variant: "destructive" })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleResume = async () => {
-    if (!simId) return
-    setLoading(true)
-    try {
-      await apiClient.patch(`/simulations/${simId}/status`, { status: "RUNNING" })
-      setSimStatus("RUNNING")
-    } catch (error) {
-      toast({ title: "Error", description: "No se pudo reanudar", variant: "destructive" })
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleStopSimulation = async () => {
-    if (!simId) return
     setLoading(true)
     try {
-      await apiClient.patch(`/simulations/${simId}/status`, { status: "CLOSED" })
-      setSimStatus("IDLE")
-      setSimId(null)
-      toast({ title: "Simulación detenida", description: "La simulación se ha detenido correctamente" })
+      await apiClient.post("/simulations/stop")
+      setIsRunning(false)
+      toast({
+        title: "Simulación detenida",
+        description: "La simulación se ha detenido correctamente",
+      })
     } catch (error) {
-      toast({ title: "Error", description: "No se pudo detener la simulación", variant: "destructive" })
+      toast({
+        title: "Error",
+        description: "No se pudo detener la simulación",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResetSimulation = async () => {
+    setLoading(true)
+    try {
+      await apiClient.post("/simulations/reset")
+      setIsRunning(false)
+      toast({
+        title: "Simulación reiniciada",
+        description: "El sistema ha sido reiniciado",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo reiniciar la simulación",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -145,9 +133,7 @@ export function SimulationPanel() {
               <CardTitle>Panel de Simulaciones</CardTitle>
               <CardDescription>Ejecuta simulaciones para entrenar al personal</CardDescription>
             </div>
-            <Badge variant={simStatus === "RUNNING" ? "default" : "secondary"}>
-              {simStatus === "RUNNING" ? "En ejecución" : simStatus === "PAUSED" ? "Pausada" : "Detenida"}
-            </Badge>
+            <Badge variant={isRunning ? "default" : "secondary"}>{isRunning ? "En ejecución" : "Detenida"}</Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -248,30 +234,22 @@ export function SimulationPanel() {
           </div>
 
           <div className="flex gap-4">
-            {simStatus === "IDLE" ? (
+            {!isRunning ? (
               <Button onClick={handleStartSimulation} disabled={loading} className="flex-1">
                 <Play className="w-4 h-4 mr-2" />
-                {loading ? "Iniciando..." : "Iniciar simulación"}
+                {loading ? "Iniciando..." : "Iniciar Simulación"}
               </Button>
             ) : (
-              <>
-                {simStatus === "RUNNING" ? (
-                  <Button onClick={handlePause} disabled={loading} variant="outline" className="flex-1">
-                    <Pause className="w-4 h-4 mr-2" />
-                    {loading ? "Pausando..." : "Pausar"}
-                  </Button>
-                ) : (
-                  <Button onClick={handleResume} disabled={loading} variant="outline" className="flex-1">
-                    <PlayCircle className="w-4 h-4 mr-2" />
-                    {loading ? "Reanudando..." : "Reanudar"}
-                  </Button>
-                )}
-                <Button onClick={handleStopSimulation} disabled={loading} variant="destructive" className="flex-1">
-                  <Square className="w-4 h-4 mr-2" />
-                  {loading ? "Deteniendo..." : "Detener"}
-                </Button>
-              </>
+              <Button onClick={handleStopSimulation} disabled={loading} variant="destructive" className="flex-1">
+                <Square className="w-4 h-4 mr-2" />
+                {loading ? "Deteniendo..." : "Detener Simulación"}
+              </Button>
             )}
+
+            <Button onClick={handleResetSimulation} disabled={loading} variant="outline">
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reiniciar
+            </Button>
           </div>
         </CardContent>
       </Card>
