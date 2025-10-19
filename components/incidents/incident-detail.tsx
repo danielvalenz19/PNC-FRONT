@@ -1,6 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
+import L from "leaflet"
+import "leaflet/dist/leaflet.css"
+import marker2x from "leaflet/dist/images/marker-icon-2x.png"
+import markerIcon from "leaflet/dist/images/marker-icon.png"
+import markerShadow from "leaflet/dist/images/marker-shadow.png"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -34,16 +40,60 @@ import {
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 
+// dynamic imports para evitar SSR en Next
+const MapContainer: any = dynamic(() => import("react-leaflet").then((m) => m.MapContainer), { ssr: false })
+const TileLayer: any = dynamic(() => import("react-leaflet").then((m) => m.TileLayer), { ssr: false })
+const Marker: any = dynamic(() => import("react-leaflet").then((m) => m.Marker), { ssr: false })
+
+// Arregla rutas de íconos por defecto de Leaflet en Next.js
+const _marker2x = (marker2x as any)?.src ?? (marker2x as unknown as string)
+const _marker = (markerIcon as any)?.src ?? (markerIcon as unknown as string)
+const _shadow = (markerShadow as any)?.src ?? (markerShadow as unknown as string)
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: _marker2x,
+  iconUrl: _marker,
+  shadowUrl: _shadow,
+})
+
 interface IncidentDetail {
   id: string
-  citizen: { masked: string } | null
   status: IncidentStatus
+  priority?: number
+  created_at: string
+  ack_at?: string | null
+  closed_at?: string | null
+
+  citizen:
+    | null
+    | {
+        id: number
+        masked?: string
+        name?: string | null
+        phone?: string | null
+        email?: string | null
+        address?: string | null
+      }
+
+  citizen_full?:
+    | null
+    | {
+        id: number
+        name: string | null
+        phone: string | null
+        email: string | null
+        address: string | null
+      }
+
   locations: Array<{
-    at: string
     lat: number
     lng: number
     accuracy?: number
+    at?: string
+    created_at?: string
   }>
+
+  currentLocation?: { lat: number; lng: number; accuracy?: number; at?: string } | null
+
   assignments: Array<{
     id: number
     unit_id: number
@@ -60,6 +110,20 @@ interface IncidentDetail {
   }>
   started_at: string
   ended_at?: string | null
+}
+
+function MiniMap({ lat, lng }: { lat: number; lng: number }) {
+  return (
+    <div className="h-56 rounded-xl overflow-hidden border mt-3">
+      <MapContainer center={[lat, lng]} zoom={16} style={{ height: "100%", width: "100%" }}>
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap contributors"
+        />
+        <Marker position={[lat, lng]} />
+      </MapContainer>
+    </div>
+  )
 }
 
 interface Unit {
@@ -289,7 +353,20 @@ export function IncidentDetail({ incidentId }: IncidentDetailProps) {
     )
   }
 
-  const currentLocation = incident.locations[incident.locations.length - 1]
+  const currentLocation =
+    incident.currentLocation ?? (incident.locations?.length ? incident.locations[incident.locations.length - 1] : null)
+
+  // Persona a mostrar: preferir citizen_full; si no, caer a citizen (maskado)
+  const person = (incident.citizen_full ?? incident.citizen ?? null) as
+    | {
+        id: number
+        name?: string | null
+        phone?: string | null
+        email?: string | null
+        address?: string | null
+        masked?: string
+      }
+    | null
 
   return (
     <div className="space-y-6">
@@ -484,16 +561,73 @@ export function IncidentDetail({ incidentId }: IncidentDetailProps) {
               </div>
             )}
 
-            {incident.citizen && (
+            {person && (
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm font-medium">Ciudadano</p>
-                  <p className="text-xs text-muted-foreground">{incident.citizen.masked}</p>
+                  <p className="text-xs text-muted-foreground">{person?.name ?? person?.masked ?? "—"}</p>
                 </div>
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Ciudadano */}
+      <Card className="glass-card mt-4">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="w-5 h-5" />
+            Ciudadano
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {person ? (
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <div className="text-sm text-muted-foreground">Nombre</div>
+                <div className="font-medium">{person?.name ?? person?.masked ?? "—"}</div>
+
+                <div className="text-sm text-muted-foreground mt-3">Teléfono</div>
+                <div className="font-medium">
+                  {person?.phone ? (
+                    <a href={`tel:${person.phone}`} className="hover:underline">{person.phone}</a>
+                  ) : (
+                    "—"
+                  )}
+                </div>
+
+                <div className="text-sm text-muted-foreground mt-3">Dirección</div>
+                <div className="font-medium">{person?.address ?? "—"}</div>
+              </div>
+
+              <div>
+                {currentLocation &&
+                Number.isFinite(Number((currentLocation as any).lat)) &&
+                Number.isFinite(Number((currentLocation as any).lng)) ? (
+                  <>
+                    <MiniMap lat={Number((currentLocation as any).lat)} lng={Number((currentLocation as any).lng)} />
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {(currentLocation as any).accuracy ? `Precisión ±${(currentLocation as any).accuracy}m · ` : ""}
+                      <a
+                        className="hover:underline"
+                        target="_blank"
+                        rel="noreferrer"
+                        href={`https://maps.google.com/?q=${(currentLocation as any).lat},${(currentLocation as any).lng}`}
+                      >
+                        Abrir en Google Maps
+                      </a>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-sm text-muted-foreground">Sin ubicación disponible.</div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">Incidente sin ciudadano asociado.</div>
+          )}
         </CardContent>
       </Card>
 
