@@ -7,6 +7,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from "@/hooks/use-auth"
+import { AlertsProvider } from "@/components/notifications/useAlerts"
 import { Suspense } from "react"
 import { ThemeProvider } from "@/components/theme-provider"
 
@@ -31,8 +32,10 @@ export default function RootLayout({
         <Suspense fallback={<div>Loading...</div>}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <AuthProvider>
-              {children}
-              <Toaster />
+              <AlertsProvider>
+                {children}
+                <Toaster />
+              </AlertsProvider>
             </AuthProvider>
           </ThemeProvider>
         </Suspense>

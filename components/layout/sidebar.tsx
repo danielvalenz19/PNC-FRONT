@@ -61,12 +61,6 @@ const navigationItems = [
     icon: Settings,
     roles: ["admin"],
   },
-  {
-    name: "Simulaciones",
-    href: "/simulations",
-    icon: PlayCircle,
-    roles: ["admin", "operator", "supervisor"],
-  },
 ]
 
 export function Sidebar() {

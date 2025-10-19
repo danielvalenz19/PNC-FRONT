@@ -16,12 +16,17 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { User, LogOut, Settings, Wifi, WifiOff, Bell } from "lucide-react"
+import { User, LogOut, Settings, Wifi, WifiOff } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import AlertsPopover from "@/components/notifications/AlertsPopover"
+import ProfileModal from "@/components/account/ProfileModal"
+import { useRouter } from "next/navigation"
 
 export function Topbar() {
   const { user, logout } = useAuth()
   const [isConnected, setIsConnected] = useState(socketManager.isConnected())
+  const [openProfile, setOpenProfile] = useState(false)
+  const router = useRouter()
 
   // Monitor socket connection status
   useState(() => {
@@ -86,10 +91,7 @@ export function Topbar() {
 
       <div className="flex items-center gap-4">
         {/* Notifications */}
-        <Button variant="ghost" size="sm" className="relative">
-          <Bell className="w-4 h-4" />
-          <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
-        </Button>
+        <AlertsPopover />
 
         {/* Theme Toggle */}
         <ThemeToggle />
@@ -114,11 +116,11 @@ export function Topbar() {
           <DropdownMenuContent align="end" className="w-56 glass-card border-border/25">
             <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setOpenProfile(true)}>
               <User className="w-4 h-4 mr-2" />
               Perfil
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/settings")}>
               <Settings className="w-4 h-4 mr-2" />
               Configuración
             </DropdownMenuItem>
@@ -129,6 +131,7 @@ export function Topbar() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <ProfileModal open={openProfile} onOpenChange={setOpenProfile} />
       </div>
     </header>
   )
