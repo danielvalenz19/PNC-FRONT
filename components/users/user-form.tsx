@@ -65,23 +65,48 @@ export function UserForm({ user, open, onClose, onSave }: UserFormProps) {
   const isEditing = !!user
 
   useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        phone: user.phone || "",
-      })
-    } else {
-      setFormData({
-        name: "",
-        email: "",
-        role: "",
-        phone: "",
-      })
+    let ignore = false
+    async function load() {
+      if (!open) return
+      try {
+        if (user?.id) {
+          const d: any = await apiClient.getUserDetail(user.id)
+          if (!ignore) {
+            setFormData({
+              email: d?.email ?? "",
+              name: d?.full_name ?? d?.name ?? "",
+              role: (d?.role as any) ?? "",
+              phone: d?.phone ?? "",
+            })
+          }
+        } else {
+          if (!ignore) {
+            setFormData({ name: "", email: "", role: "", phone: "" })
+          }
+        }
+      } catch (e) {
+        // Fallback to provided user data if fetch fails
+        if (!ignore) {
+          if (user) {
+            setFormData({
+              name: (user as any).full_name ?? user.name ?? "",
+              email: user.email ?? "",
+              role: user.role ?? "",
+              phone: user.phone || "",
+            })
+          } else {
+            setFormData({ name: "", email: "", role: "", phone: "" })
+          }
+        }
+      } finally {
+        if (!ignore) setError(null)
+      }
     }
-    setError(null)
-  }, [user, open])
+    load()
+    return () => {
+      ignore = true
+    }
+  }, [user?.id, open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
