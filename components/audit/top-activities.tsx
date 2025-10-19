@@ -23,10 +23,12 @@ export function TopActivities({ dateRange }: TopActivitiesProps) {
   const [topActions, setTopActions] = useState<TopActivity[]>([])
   const [topUsers, setTopUsers] = useState<TopActivity[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const loadTopActivities = async () => {
     try {
       setLoading(true)
+      setError(null)
 
       const params = new URLSearchParams()
       if (dateRange?.from) params.set("from", dateRange.from)
@@ -41,6 +43,7 @@ export function TopActivities({ dateRange }: TopActivitiesProps) {
       setTopUsers(response.top_users.slice(0, 5))
     } catch (err) {
       console.error("Failed to load top activities:", err)
+      setError("No se pudo cargar")
     } finally {
       setLoading(false)
     }
@@ -99,7 +102,11 @@ export function TopActivities({ dateRange }: TopActivitiesProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {topActions.length === 0 ? (
+          {error ? (
+            <div className="text-center py-8 text-destructive">
+              <p>No se pudo cargar</p>
+            </div>
+          ) : topActions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <TrendingUp className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>No hay datos disponibles</p>
@@ -131,7 +138,11 @@ export function TopActivities({ dateRange }: TopActivitiesProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {topUsers.length === 0 ? (
+          {error ? (
+            <div className="text-center py-8 text-destructive">
+              <p>No se pudo cargar</p>
+            </div>
+          ) : topUsers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>No hay datos disponibles</p>

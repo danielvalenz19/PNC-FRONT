@@ -335,9 +335,17 @@ class ApiClient {
     return this.request(endpoint)
   }
 
+  async getUserStats() {
+    return this.request(API_ENDPOINTS.ADMIN_USERS_STATS)
+  }
+
+  getUserDetail(id: number | string) {
+    return this.request(API_ENDPOINTS.ADMIN_USER_DETAIL(id))
+  }
+
   async createUser(data: {
     email: string
-    name: string
+    full_name: string
     role: string
     phone?: string
   }) {
@@ -357,6 +365,22 @@ class ApiClient {
     return this.request(API_ENDPOINTS.ADMIN_UPDATE_STATUS(id), {
       method: "PATCH",
       body: JSON.stringify({ status }),
+    })
+  }
+
+  async updateUser(
+    id: number | string,
+    data: {
+      email: string
+      full_name: string
+      role: string
+      phone?: string | null
+      status?: "active" | "inactive"
+    },
+  ) {
+    return this.request(API_ENDPOINTS.ADMIN_USER_DETAIL(id), {
+      method: "PATCH",
+      body: JSON.stringify(data),
     })
   }
 

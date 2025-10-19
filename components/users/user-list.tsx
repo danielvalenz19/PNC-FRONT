@@ -13,6 +13,7 @@ import { Users, Search, Plus, Edit, Clock, Mail, RotateCcw, Power, PowerOff } fr
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 
+type RawUser = any
 interface User {
   id: number
   name: string
@@ -43,6 +44,17 @@ export function UserList({ onEditUser, onCreateUser, refreshTrigger }: UserListP
   const { on, off, subscribeToOps } = useSocket()
   const { toast } = useToast()
 
+  const normalizeUser = (u: RawUser): User => ({
+    id: (u?.id ?? u?.user_id) as number,
+    email: u?.email ?? "",
+    name: (u?.full_name ?? u?.name ?? "") as string,
+    phone: (u?.phone ?? u?.tel ?? "") as string,
+    role: (u?.role ?? "operator") as User["role"],
+    status: ((u?.status ?? (u?.active ? "active" : "inactive")) as "active" | "inactive") || "inactive",
+    created_at: (u?.created_at ?? u?.createdAt ?? new Date().toISOString()) as string,
+    last_login: (u?.last_login ?? u?.lastLogin) as string | undefined,
+  })
+
   const loadUsers = async () => {
     try {
       setLoading(true)
@@ -56,17 +68,18 @@ export function UserList({ onEditUser, onCreateUser, refreshTrigger }: UserListP
         limit: 20,
       })
 
-      // Backend returns { meta, data }, where meta has page/limit/total and data is the list
+      // Normalize shape and pagination
       if (Array.isArray(response)) {
-        // backwards compatibility: older endpoints returned array directly
-        setUsers(response)
+        const items = response.map(normalizeUser)
+        setUsers(items)
         setTotalPages(1)
       } else {
         const resp: any = response
-        const data = resp?.data ?? resp?.items ?? []
-        const meta = resp?.meta ?? { page: currentPage, limit: 20, total: data.length }
-        setUsers(data)
-        setTotalPages(Math.max(1, Math.ceil((meta.total || data.length) / (meta.limit || 20))))
+        const data: RawUser[] = resp?.data ?? resp?.items ?? []
+        const items = data.map(normalizeUser)
+        const meta = resp?.meta ?? { page: currentPage, limit: 20, total: items.length }
+        setUsers(items)
+        setTotalPages(Math.max(1, Math.ceil((meta.total || items.length) / (meta.limit || 20))))
       }
     } catch (err) {
       setError("Error al cargar usuarios")
@@ -141,8 +154,10 @@ export function UserList({ onEditUser, onCreateUser, refreshTrigger }: UserListP
     subscribeToOps()
 
     const handleUserUpdate = (data: {
-      id: number
+      id?: number
+      user_id?: number
       name?: string
+      full_name?: string
       email?: string
       role?: "admin" | "operator" | "supervisor" | "unit"
       status?: "active" | "inactive"
@@ -151,9 +166,11 @@ export function UserList({ onEditUser, onCreateUser, refreshTrigger }: UserListP
       console.log("[v0] User update received:", data)
       setUsers((prev) =>
         prev.map((user) => {
-          if (user.id === data.id) {
+          const incomingId = (data.id ?? (data as any).user_id) as number | undefined
+          if (incomingId && user.id === incomingId) {
             return {
               ...user,
+              ...(data.full_name && { name: data.full_name }),
               ...(data.name && { name: data.name }),
               ...(data.email && { email: data.email }),
               ...(data.role && { role: data.role }),

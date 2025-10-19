@@ -45,10 +45,12 @@ export const API_ENDPOINTS = {
   OPS_AUDIT: "/api/v1/ops/audit",
 
   // Admin (admin only)
-  ADMIN_USERS: "/api/v1/users",
+  ADMIN_USERS: "/api/v1/admin/users",
   ADMIN_CREATE_USER: "/api/v1/admin/users",
+  ADMIN_USER_DETAIL: (id: number | string) => `/api/v1/admin/users/${id}`,
   ADMIN_RESET_PASSWORD: (id: number) => `/api/v1/admin/users/${id}/reset-password`,
   ADMIN_UPDATE_STATUS: (id: number) => `/api/v1/admin/users/${id}/status`,
+  ADMIN_USERS_STATS: "/api/v1/admin/users/stats",
 
   // Simulations
   SIMULATIONS: "/api/v1/simulations",

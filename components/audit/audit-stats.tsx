@@ -30,19 +30,22 @@ interface AuditStatsProps {
 export function AuditStats({ dateRange }: AuditStatsProps) {
   const [stats, setStats] = useState<AuditStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const loadStats = async () => {
     try {
       setLoading(true)
+      setError(null)
 
       const params = new URLSearchParams()
       if (dateRange?.from) params.set("from", dateRange.from)
       if (dateRange?.to) params.set("to", dateRange.to)
 
-  const response = await apiClient.get<AuditStats>(`/ops/audit/stats?${params.toString()}`)
+      const response = await apiClient.get<AuditStats>(`/ops/audit/stats?${params.toString()}`)
       setStats(response)
     } catch (err) {
       console.error("Failed to load audit stats:", err)
+      setError("No se pudo cargar")
     } finally {
       setLoading(false)
     }
@@ -98,6 +101,18 @@ export function AuditStats({ dateRange }: AuditStatsProps) {
           </Card>
         ))}
       </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className="glass-card">
+        <CardContent className="p-6">
+          <div className="text-center py-6">
+            <p className="text-destructive">{error}</p>
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 

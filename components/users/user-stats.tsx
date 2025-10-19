@@ -36,32 +36,16 @@ export function UserStats({ refreshTrigger }: UserStatsProps) {
   const loadStats = async () => {
     try {
       setLoading(true)
-      const users = await apiClient.getUsers({})
-
-      // Backend returns { meta, data }
-      let data: any[] = []
-      let meta: any = { total: 0 }
-
-      if (Array.isArray(users)) {
-        data = users
-        meta = { total: users.length }
-      } else {
-        const resp: any = users
-        data = resp?.data ?? resp?.items ?? []
-        meta = resp?.meta ?? { total: data.length }
-      }
-
-      const newStats: UserStats = {
-        total: meta.total || data.length,
-        active: data.filter((user: { status: string }) => user.status === "active").length,
-        inactive: data.filter((user: { status: string }) => user.status === "inactive").length,
-        admins: data.filter((user: { role: string }) => user.role === "admin").length,
-        operators: data.filter((user: { role: string }) => user.role === "operator").length,
-        supervisors: data.filter((user: { role: string }) => user.role === "supervisor").length,
-        units: data.filter((user: { role: string }) => user.role === "unit").length,
-      }
-
-      setStats(newStats)
+      const s: any = await apiClient.getUserStats()
+      setStats({
+        total: s?.total ?? 0,
+        active: s?.active ?? 0,
+        operators: s?.operators ?? 0,
+        inactive: s?.inactive ?? 0,
+        admins: s?.admins ?? 0,
+        supervisors: s?.supervisors ?? 0,
+        units: s?.units ?? 0,
+      })
     } catch (err) {
       console.error("[v0] Failed to load user stats:", err)
     } finally {

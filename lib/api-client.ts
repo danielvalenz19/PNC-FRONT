@@ -126,6 +126,19 @@ export class ApiClient {
             }
           }
 
+          // 1b) /api/v1/audit/* -> /api/v1/ops/audit/* (compat for audit routes)
+          if (ep.startsWith("/api/v1/audit/")) {
+            const altEp = ep.replace("/api/v1/audit/", "/api/v1/ops/audit/")
+            const altUrl = `${API_CONFIG.BASE_URL}${altEp}`
+            console.log(`[api-client] 404 received, retrying on ${altUrl}`)
+            const altResponse = await fetch(altUrl, config)
+            if (altResponse.ok) {
+              return (altResponse.status === 204
+                ? (undefined as T)
+                : ((await altResponse.json()) as T))
+            }
+          }
+
           // 2) /api/v1/ops/... -> try without /ops/ (some backends expose non-ops routes)
           if (ep.startsWith("/api/v1/ops/")) {
             const altEp = ep.replace("/api/v1/ops/", "/api/v1/")
@@ -247,6 +260,28 @@ export class ApiClient {
     const qs = new URLSearchParams({ from, to, group_by: groupBy })
     // Use ops path; request() will ensure /api/v1 prefix
     return this.get(`/ops/reports/response-times?${qs.toString()}`)
+  }
+
+  // --- Admin endpoints
+  async getUsers(params?: { q?: string; role?: string; status?: string; page?: number; limit?: number }) {
+    const qs = this.buildQuery(params as any)
+    return this.get(`/api/v1/admin/users${qs}`)
+  }
+
+  getUserDetail(id: number | string) {
+    return this.get(`/api/v1/admin/users/${id}`)
+  }
+
+  resetUserPassword(id: number | string) {
+    return this.post(`/api/v1/admin/users/${id}/reset-password`)
+  }
+
+  updateUserStatus(id: number | string, status: "active" | "inactive") {
+    return this.patch(`/api/v1/admin/users/${id}/status`, { status })
+  }
+
+  getUserStats() {
+    return this.get(`/api/v1/admin/users/stats`)
   }
 }
 

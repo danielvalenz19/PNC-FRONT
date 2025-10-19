@@ -103,18 +103,23 @@ export function UserForm({ user, open, onClose, onSave }: UserFormProps) {
 
       const payload = {
         email: formData.email.trim(),
-        name: formData.name.trim(),
+        full_name: formData.name.trim(),
         role: formData.role,
         ...(formData.phone.trim() && { phone: formData.phone.trim() }),
       }
 
       if (isEditing && user) {
-        toast({
-          title: "Información",
-          description: "La edición de usuarios aún no está implementada en el API",
-          variant: "destructive",
+        await apiClient.updateUser(user.id, {
+          email: payload.email,
+          full_name: payload.full_name,
+          role: payload.role,
+          phone: formData.phone?.trim() ? formData.phone.trim() : null,
         })
-        return
+
+        toast({
+          title: "Usuario actualizado",
+          description: `Usuario ${formData.name} actualizado exitosamente`,
+        })
       } else {
         const response = await apiClient.createUser(payload)
 
@@ -124,7 +129,7 @@ export function UserForm({ user, open, onClose, onSave }: UserFormProps) {
         })
 
         if (response && typeof response === "object" && "id" in response) {
-          console.log("[v0] New user created with ID:", response.id)
+          console.log("[v0] New user created with ID:", (response as any).id)
         }
       }
 
