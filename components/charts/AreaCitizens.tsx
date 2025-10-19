@@ -11,14 +11,10 @@ export default function AreaCitizens({ data, xKey, yKey, y2Key }:{
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey={xKey} />
           <YAxis />
-          <Tooltip
-            labelFormatter={(v) => new Date(v as any).toLocaleDateString('es-GT')}
-          />
+          <Tooltip labelFormatter={(v) => new Date(v as any).toLocaleDateString('es-GT')} />
           <Legend />
-          {/* Nuevos por día */}
-          <Area type="monotone" name="Nuevos"     dataKey={yKey}  fillOpacity={0.3} strokeWidth={2} />
-          {/* Suma acumulada */}
-          <Area type="monotone" name="Acumulado"  dataKey={y2Key} fillOpacity={0.15} strokeWidth={2} />
+          <Area type="monotone" name="Nuevos"    dataKey={yKey}  fillOpacity={0.3}  strokeWidth={2} />
+          <Area type="monotone" name="Acumulado" dataKey={y2Key} fillOpacity={0.15} strokeWidth={2} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
