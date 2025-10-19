@@ -133,7 +133,7 @@ export class AuthManager {
     if (!tokens) return null
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/me`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
         headers: {
           Authorization: `Bearer ${tokens.accessToken}`,
           "ngrok-skip-browser-warning": "true",

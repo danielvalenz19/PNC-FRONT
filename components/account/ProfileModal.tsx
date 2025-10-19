@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api-client";
+import { API_ENDPOINTS } from "@/lib/config";
 import { useAuth } from "@/hooks/use-auth";
 
 type Props = { open: boolean; onOpenChange: (v: boolean) => void };
@@ -22,7 +23,7 @@ export default function ProfileModal({ open, onOpenChange }: Props) {
       setLoading(true);
       try {
         if (user?.email && user?.role && user?.id && !ignore) setData(user);
-        const me = await apiClient.get("/me");
+        const me = await apiClient.get(API_ENDPOINTS.ME);
         if (!ignore) setData(me);
       } catch (_) {
         // keep context data if request fails
@@ -88,4 +89,3 @@ export default function ProfileModal({ open, onOpenChange }: Props) {
     </Dialog>
   );
 }
-

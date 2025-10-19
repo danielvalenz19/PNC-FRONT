@@ -29,7 +29,7 @@ export const API_ENDPOINTS = {
   REFRESH: "/api/v1/auth/refresh",
   LOGOUT: "/api/v1/auth/logout",
   CHANGE_PASSWORD: "/api/v1/auth/change-password",
-  ME: "/api/v1/me",
+  ME: "/api/v1/auth/me",
 
   // Ops (operator, supervisor, admin)
   OPS_INCIDENTS: "/api/v1/ops/incidents",
