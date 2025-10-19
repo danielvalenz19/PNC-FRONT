@@ -7,12 +7,13 @@ import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
 interface IncidentDetailPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function IncidentDetailPage({ params }: IncidentDetailPageProps) {
+export default async function IncidentDetailPage({ params }: IncidentDetailPageProps) {
+  const { id } = await params
   return (
     <RouteGuard allowedRoles={["admin", "operator", "supervisor"]}>
       <AdminLayout>
@@ -30,7 +31,7 @@ export default function IncidentDetailPage({ params }: IncidentDetailPageProps) 
             </div>
           </div>
 
-          <IncidentDetail incidentId={params.id} />
+          <IncidentDetail incidentId={id} />
         </div>
       </AdminLayout>
     </RouteGuard>
