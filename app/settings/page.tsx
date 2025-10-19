@@ -12,8 +12,8 @@ export default function SettingsPage() {
       <AdminLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-white">Configuración</h1>
-            <p className="text-white/70">Administra la configuración del sistema y ejecuta simulaciones</p>
+            <h1 className="text-3xl font-bold text-foreground">Configuración</h1>
+            <p className="text-muted-foreground">Administra la configuración del sistema y ejecuta simulaciones</p>
           </div>
 
           <Tabs defaultValue="system" className="space-y-6">

@@ -47,8 +47,8 @@ export default function UsersPage() {
       <AdminLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-white text-balance">Gestión de Personal</h1>
-            <p className="text-white/70">Administra el personal del sistema y sus permisos de acceso</p>
+            <h1 className="text-3xl font-bold text-foreground text-balance">Gestión de Personal</h1>
+            <p className="text-muted-foreground">Administra el personal del sistema y sus permisos de acceso</p>
           </div>
 
           <UserStats refreshTrigger={refreshTrigger} />

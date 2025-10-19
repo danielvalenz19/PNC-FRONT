@@ -17,6 +17,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { User, LogOut, Settings, Wifi, WifiOff, Bell } from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export function Topbar() {
   const { user, logout } = useAuth()
@@ -89,6 +90,9 @@ export function Topbar() {
           <Bell className="w-4 h-4" />
           <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
         </Button>
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
 
         {/* User Menu */}
         <DropdownMenu>

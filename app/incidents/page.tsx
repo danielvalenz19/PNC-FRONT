@@ -17,8 +17,8 @@ export default function IncidentsPage() {
       <AdminLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-white text-balance">Gestión de Incidentes</h1>
-            <p className="text-white/70">Administra y monitorea todos los incidentes del sistema</p>
+            <h1 className="text-3xl font-bold text-foreground text-balance">Gestión de Incidentes</h1>
+            <p className="text-muted-foreground">Administra y monitorea todos los incidentes del sistema</p>
           </div>
 
           <IncidentFilters onFiltersChange={setFilters} />

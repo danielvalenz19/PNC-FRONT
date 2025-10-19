@@ -60,29 +60,29 @@ export function AuditStats({ dateRange }: AuditStatsProps) {
       title: "Total de Acciones",
       value: stats?.total_actions || 0,
       icon: Activity,
-      color: "text-blue-600",
-      bgColor: "bg-blue-500/10",
+      color: "text-blue-600 dark:text-blue-300",
+      bgColor: "bg-blue-500/10 dark:bg-blue-400/20",
     },
     {
       title: "Usuarios Activos",
       value: stats?.unique_users || 0,
       icon: Users,
-      color: "text-green-600",
-      bgColor: "bg-green-500/10",
+      color: "text-green-600 dark:text-green-300",
+      bgColor: "bg-green-500/10 dark:bg-green-400/20",
     },
     {
       title: "Eventos de Seguridad",
       value: stats?.security_events || 0,
       icon: Shield,
-      color: "text-purple-600",
-      bgColor: "bg-purple-500/10",
+      color: "text-purple-600 dark:text-purple-300",
+      bgColor: "bg-purple-500/10 dark:bg-purple-400/20",
     },
     {
       title: "Intentos Fallidos",
       value: stats?.failed_logins || 0,
       icon: AlertTriangle,
-      color: "text-red-600",
-      bgColor: "bg-red-500/10",
+      color: "text-red-600 dark:text-red-300",
+      bgColor: "bg-red-500/10 dark:bg-red-400/20",
     },
   ]
 
@@ -126,9 +126,9 @@ export function AuditStats({ dateRange }: AuditStatsProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
-                  <p className="text-2xl font-bold mt-2">{card.value.toLocaleString()}</p>
+                  <p className="text-2xl font-bold mt-2 tracking-tight">{card.value.toLocaleString()}</p>
                   {card.title === "Intentos Fallidos" && card.value > 0 && (
-                    <p className="text-xs text-red-600 mt-1">Revisar actividad sospechosa</p>
+                    <p className="text-xs text-red-600 dark:text-red-300 mt-1">Revisar actividad sospechosa</p>
                   )}
                 </div>
                 <div className={`p-3 rounded-full ${card.bgColor}`}>
