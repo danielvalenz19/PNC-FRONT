@@ -7,6 +7,7 @@ import { RouteGuard } from '@/components/auth/route-guard';
 import { AdminLayout } from '@/components/layout/admin-layout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { getCitizenStats, listCitizens, updateCitizenStatus, createCitizen } from '@/lib/api/citizens';
@@ -229,7 +230,7 @@ function CitizenTable() {
               <Input value={createForm.address} onChange={e=>setCreateForm({...createForm,address:e.target.value})}/>
             </div>
             <div className="space-y-1 md:col-span-2"><Label>Contraseña inicial</Label>
-              <Input type="password" value={createForm.password} onChange={e=>setCreateForm({...createForm,password:e.target.value})}/>
+              <PasswordInput value={createForm.password} onChange={e=>setCreateForm({...createForm,password:e.target.value})}/>
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">

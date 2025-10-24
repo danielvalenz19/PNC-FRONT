@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -76,9 +76,8 @@ export function ChangePasswordForm() {
 
             <div className="space-y-2">
               <Label htmlFor="current">Contraseña actual</Label>
-              <Input
+              <PasswordInput
                 id="current"
-                type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="••••••••"
@@ -89,9 +88,8 @@ export function ChangePasswordForm() {
 
             <div className="space-y-2">
               <Label htmlFor="new">Nueva contraseña</Label>
-              <Input
+              <PasswordInput
                 id="new"
-                type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="••••••••"
@@ -102,9 +100,8 @@ export function ChangePasswordForm() {
 
             <div className="space-y-2">
               <Label htmlFor="confirm">Confirmar nueva contraseña</Label>
-              <Input
+              <PasswordInput
                 id="confirm"
-                type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
