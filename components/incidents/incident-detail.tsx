@@ -97,8 +97,10 @@ interface IncidentDetail {
   assignments: Array<{
     id: number
     unit_id: number
+    unit_name?: string
     by: string
     at: string
+    cleared_at?: string | null
     note?: string
   }>
   events: Array<{
@@ -162,8 +164,8 @@ export function IncidentDetail({ incidentId }: IncidentDetailProps) {
     setError(null)
     try {
       // 1) Siempre traer el detalle del incidente
-      const incidentResponse = await apiClient.getIncidentDetail(incidentId)
-      setIncident(incidentResponse)
+  const incidentResponse = await apiClient.getIncidentDetail(incidentId)
+  setIncident(incidentResponse as unknown as IncidentDetail)
 
       // 2) Intentar cargar unidades disponibles (sin romper el detalle si falla)
       try {
@@ -191,7 +193,7 @@ export function IncidentDetail({ incidentId }: IncidentDetailProps) {
     const handleIncidentUpdate = (data: {
       id: string
       patch: {
-        status?: IncidentStatus
+        status?: string
         location?: { lat: number; lng: number }
         assignment?: any
         event?: any
@@ -662,21 +664,43 @@ export function IncidentDetail({ incidentId }: IncidentDetailProps) {
       {incident.assignments.length > 0 && (
         <Card className="glass-card">
           <CardHeader>
-            <CardTitle>Asignaciones</CardTitle>
+            <CardTitle>Unidades asignadas</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {incident.assignments.map((assignment) => (
-                <div key={assignment.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
-                  <div>
-                    <p className="font-medium">Unidad {assignment.unit_id}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Asignado por {assignment.by} • {new Date(assignment.at).toLocaleString("es-ES")}
-                    </p>
-                    {assignment.note && <p className="text-sm text-muted-foreground mt-1">{assignment.note}</p>}
+              {incident.assignments.map((assignment) => {
+                const isActive = !assignment.cleared_at
+                return (
+                  <div
+                    key={assignment.id}
+                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                      isActive ? "bg-blue-500/5 border-blue-500/30" : "bg-muted/20 border-border/25"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">Unidad {assignment.unit_name ?? `#${assignment.unit_id}`}</p>
+                        {isActive && (
+                          <Badge variant="outline" className="border-blue-500/40 text-blue-700 bg-blue-500/10">
+                            Activa
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Asignado por {assignment.by} • {new Date(assignment.at).toLocaleString("es-ES")}
+                      </p>
+                      {assignment.note && <p className="text-sm text-muted-foreground mt-1">{assignment.note}</p>}
+                    </div>
+                    <div>
+                      <a href="/units">
+                        <Button variant="ghost" size="sm">
+                          Ver unidad
+                        </Button>
+                      </a>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </CardContent>
         </Card>

@@ -21,6 +21,14 @@ interface Incident {
   accuracy?: number
   priority?: number
   battery?: number
+  assignments?: Array<{
+    id: number
+    unit_id: number
+    unit_name?: string
+    by?: string
+    at?: string
+    cleared_at?: string | null
+  }>
 }
 
 export function IncidentQueue() {
@@ -268,6 +276,19 @@ export function IncidentQueue() {
                         <span className="text-xs">(±{Number(incident.accuracy)}m)</span>
                       )}
                     </div>
+                    <div className="text-xs mt-1">
+                      Incidente: <strong>{incident.id}</strong>
+                    </div>
+                    {!!incident.assignments?.length && (
+                      (() => {
+                        const active = incident.assignments?.find((a) => !a.cleared_at)
+                        return active ? (
+                          <div className="text-xs text-muted-foreground">
+                            Unidad: <strong>{active.unit_name ?? `#${active.unit_id}`}</strong>
+                          </div>
+                        ) : null
+                      })()
+                    )}
                   </div>
                 </div>
 

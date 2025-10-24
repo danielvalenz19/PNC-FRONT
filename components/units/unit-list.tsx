@@ -10,6 +10,7 @@ import { apiClient } from "@/lib/api-client"
 import { useSocket } from "@/hooks/use-socket"
 import { useAuth } from "@/hooks/use-auth"
 import type { UnitStatus } from "@/lib/config"
+import { unitStatusLabel, unitPillColor } from "@/utils/unitLabels"
 import { Car, Search, Plus, Edit, MapPin, Clock } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
@@ -143,21 +144,7 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
     }
   }
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "available":
-        return "Disponible"
-      case "en_route":
-      case "on_site":
-        return "Ocupada"
-      case "out_of_service":
-        return "Fuera de línea"
-      case "maintenance":
-        return "Mantenimiento"
-      default:
-        return status
-    }
-  }
+  const getStatusLabel = (status: string) => unitStatusLabel[status] ?? status
 
   const uniqueTypes = Array.from(new Set(units.map((unit) => unit.type))).filter(Boolean)
 
@@ -298,7 +285,15 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={getStatusColor(unit.status)}>
+                    <Badge
+                      variant="outline"
+                      className={getStatusColor(unit.status)}
+                      style={{
+                        borderColor: unitPillColor[unit.status] ?? undefined,
+                        color: unitPillColor[unit.status] ?? undefined,
+                      }}
+                      title={unit.status === "on_site" ? "En sitio" : undefined}
+                    >
                       {getStatusLabel(unit.status)}
                     </Badge>
                     {!unit.active && (

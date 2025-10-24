@@ -22,6 +22,14 @@ interface Incident {
   accuracy?: number
   priority?: number
   battery?: number
+  assignments?: Array<{
+    id: number
+    unit_id: number
+    unit_name?: string
+    by?: string
+    at?: string
+    cleared_at?: string | null
+  }>
 }
 
 interface IncidentListProps {
@@ -302,6 +310,19 @@ export function IncidentList({ filters }: IncidentListProps) {
                             <span>(±{Number(incident.accuracy)}m)</span>
                           )}
                         </div>
+                        <div className="text-muted-foreground">
+                          Incidente: <strong>{incident.id}</strong>
+                        </div>
+                        {!!incident.assignments?.length && (
+                          (() => {
+                            const active = incident.assignments?.find((a) => !a.cleared_at)
+                            return active ? (
+                              <div className="text-muted-foreground">
+                                Unidad: <strong>{active.unit_name ?? `#${active.unit_id}`}</strong>
+                              </div>
+                            ) : null
+                          })()
+                        )}
                       </div>
                     </div>
                   </div>

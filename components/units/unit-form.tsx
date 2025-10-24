@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { apiClient } from "@/lib/api-client"
-import type { UnitStatus } from "@/lib/config"
+import { toast } from "@/hooks/use-toast"
 import { Car, Save, X } from "lucide-react"
 
 interface Unit {
@@ -25,7 +25,7 @@ interface Unit {
   name: string
   type: string
   plate?: string
-  status: UnitStatus
+  status: string
   active: boolean
   lat?: number
   lng?: number
@@ -44,7 +44,8 @@ interface UnitFormData {
   type: string
   plate: string
   active: boolean
-  status?: UnitStatus
+  // Backend tokens: available | en_route | on_site | out_of_service
+  status?: string
 }
 
 // Map Spanish labels <-> API values supported by backend
@@ -60,11 +61,11 @@ const TYPE_API_TO_LABEL = {
   ambulance: "Ambulancia",
 } as const
 
-const statusOptions: { value: UnitStatus; label: string }[] = [
-  { value: "AVAILABLE", label: "Disponible" },
-  { value: "BUSY", label: "Ocupada" },
-  { value: "OFFLINE", label: "Fuera de línea" },
-  { value: "MAINTENANCE", label: "Mantenimiento" },
+const statusOptions: { value: string; label: string }[] = [
+  { value: "available", label: "Disponible" },
+  { value: "en_route", label: "Ocupada" },
+  { value: "on_site", label: "Ocupada (en sitio)" },
+  { value: "out_of_service", label: "Fuera de línea" },
 ]
 
 export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
@@ -76,6 +77,7 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [lockIncidentId, setLockIncidentId] = useState<string | null>(null)
 
   const isEditing = !!unit
 
@@ -89,8 +91,19 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
           "Patrulla",
         plate: (unit.plate ?? "").toUpperCase(),
         active: !!unit.active,
-        status: unit.status as UnitStatus,
+        status: unit.status,
       })
+      // Fetch lock info for active assignment
+      ;(async () => {
+        try {
+          const resp = await apiClient.get<{ incidentId: string | null }>(
+            `/ops/units/${unit.id}/active-assignment`,
+          )
+          setLockIncidentId(resp?.incidentId ?? null)
+        } catch (e) {
+          setLockIncidentId(null)
+        }
+      })()
     } else {
       setFormData({
         name: "",
@@ -98,6 +111,7 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
         plate: "",
         active: true,
       })
+      setLockIncidentId(null)
     }
   }, [unit, open])
 
@@ -113,18 +127,18 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
     try {
       setLoading(true)
 
-      const payload = {
+      const payload: any = {
         name: formData.name.trim(),
         // Map label to API value expected by backend
         type: TYPE_LABEL_TO_API[formData.type as keyof typeof TYPE_LABEL_TO_API],
         plate: formData.plate.trim() || undefined,
         // Ensure boolean
         active: !!formData.active,
-      } as {
-        name: string
-        type: "patrol" | "moto" | "ambulance"
-        plate?: string
-        active: boolean
+      }
+
+      if (isEditing && formData.status) {
+        // send backend-friendly token; do not include when not provided
+        payload.status = formData.status
       }
 
       if (isEditing && unit) {
@@ -136,7 +150,20 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
       onSave()
       onClose()
     } catch (err: any) {
-      setError(err.message || "Error al guardar la unidad")
+      const msg = String(err?.message || "Error al guardar la unidad")
+      // Handle 409 conflict (unit is assigned and cannot be manually freed)
+      if (msg.includes("HTTP 409")) {
+        toast({
+          title: "No se puede cambiar el estado",
+          description:
+            lockIncidentId
+              ? `La unidad está asignada al incidente ${lockIncidentId}. Cierra el incidente para liberarla.`
+              : "La unidad está asignada; no se puede liberar manualmente.",
+        })
+        setLoading(false)
+        return
+      }
+      setError(msg)
       console.error("[v0] Failed to save unit:", err)
     } finally {
       setLoading(false)
@@ -213,9 +240,9 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
               <Label htmlFor="status">Estado</Label>
               <Select
                 value={formData.status || ""}
-                onValueChange={(value) => setFormData({ ...formData, status: value as UnitStatus })}
+                onValueChange={(value) => setFormData({ ...formData, status: value })}
               >
-                <SelectTrigger className="bg-input/40 backdrop-blur-sm">
+                <SelectTrigger className="bg-input/40 backdrop-blur-sm" disabled={!!lockIncidentId}>
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
                 <SelectContent className="glass-card border-border/25">
@@ -226,6 +253,11 @@ export function UnitForm({ unit, open, onClose, onSave }: UnitFormProps) {
                   ))}
                 </SelectContent>
               </Select>
+              {lockIncidentId && (
+                <p className="text-xs mt-1">
+                  Estado controlado por el incidente <b>{lockIncidentId}</b>. Se libera al cerrar el incidente.
+                </p>
+              )}
             </div>
           )}
 
