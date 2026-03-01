@@ -114,12 +114,12 @@ export function TopActivities({ dateRange }: TopActivitiesProps) {
           ) : (
             <div className="space-y-3">
               {topActions.map((item, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
-                  <div className="flex items-center gap-3">
+                <div key={index} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 bg-muted/20 rounded-lg">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-sm font-bold">
                       {index + 1}
                     </div>
-                    <span className="font-medium">{getActionLabel(item.action!)}</span>
+                    <span className="font-medium break-words">{getActionLabel(item.action!)}</span>
                   </div>
                   <Badge variant="outline">{item.count} veces</Badge>
                 </div>
@@ -150,12 +150,12 @@ export function TopActivities({ dateRange }: TopActivitiesProps) {
           ) : (
             <div className="space-y-3">
               {topUsers.map((item, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
-                  <div className="flex items-center gap-3">
+                <div key={index} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 bg-muted/20 rounded-lg">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div className="w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center text-sm font-bold">
                       {index + 1}
                     </div>
-                    <span className="font-medium">{item.user}</span>
+                    <span className="font-medium break-all">{item.user}</span>
                   </div>
                   <Badge variant="outline">{item.count} acciones</Badge>
                 </div>

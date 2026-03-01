@@ -48,7 +48,7 @@ export default function UnitsPage() {
       <AdminLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground text-balance">Gestión de Unidades</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground text-balance">Gestión de Unidades</h1>
             <p className="text-muted-foreground">Administra las unidades de respuesta del sistema</p>
           </div>
 

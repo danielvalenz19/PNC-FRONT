@@ -15,8 +15,8 @@ export default function DashboardPage() {
       <AdminLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-white text-balance">Dashboard</h1>
-            <p className="text-white/70">Monitoreo en tiempo real del sistema de emergencias</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground text-balance">Dashboard</h1>
+            <p className="text-muted-foreground">Monitoreo en tiempo real del sistema de emergencias</p>
           </div>
 
           <StatsCards />
@@ -30,4 +30,3 @@ export default function DashboardPage() {
     </RouteGuard>
   )
 }
-

@@ -42,7 +42,7 @@ export default function CiudadanosPage() {
 function Header() {
   return (
     <div>
-      <h1 className="text-3xl font-bold text-foreground text-balance">Ciudadanos</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-foreground text-balance">Ciudadanos</h1>
       <p className="text-muted-foreground">Métricas, crecimiento y gestión de ciudadanos en una sola vista.</p>
     </div>
   );
@@ -155,17 +155,22 @@ function CitizenTable() {
         <CardContent className="space-y-3">
           {/* Filtros */}
           <div className="flex gap-2 flex-wrap items-center">
-            <Input placeholder="Buscar por nombre o email…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
+            <Input
+              placeholder="Buscar por nombre o email…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="w-full sm:w-80"
+            />
             <Select onValueChange={(v) => setStatus(v as any)} value={status}>
-              <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="active">Activos</SelectItem>
                 <SelectItem value="inactive">Bloqueados</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="secondary" onClick={() => { setQ(''); setStatus(undefined); setPage(1); }}>Limpiar</Button>
+            <Button variant="secondary" onClick={() => { setQ(''); setStatus(undefined); setPage(1); }} className="w-full sm:w-auto">Limpiar</Button>
             <div className="grow" />
-            <Button onClick={() => setCreateOpen(true)}>Crear ciudadano</Button>
+            <Button onClick={() => setCreateOpen(true)} className="w-full sm:w-auto">Crear ciudadano</Button>
           </div>
 
           {/* Tabla */}
@@ -209,11 +214,11 @@ function CitizenTable() {
           </div>
 
           {/* Paginación */}
-          <div className="flex items-center justify-between pt-2">
-            <div className="text-sm">Total: {total.toLocaleString('es-GT')}</div>
-            <div className="flex gap-2">
-              <Button variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Anterior</Button>
-              <Button variant="outline" disabled={(page * limit) >= total} onClick={() => setPage((p) => p + 1)}>Siguiente</Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pt-2">
+            <div className="text-sm text-center sm:text-left">Total: {total.toLocaleString('es-GT')}</div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="w-full sm:w-auto">Anterior</Button>
+              <Button variant="outline" disabled={(page * limit) >= total} onClick={() => setPage((p) => p + 1)} className="w-full sm:w-auto">Siguiente</Button>
             </div>
           </div>
         </CardContent>

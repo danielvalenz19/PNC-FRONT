@@ -280,19 +280,19 @@ export function IncidentDetail({ incidentId }: IncidentDetailProps) {
   const getStatusColor = (status: IncidentStatus) => {
     switch (status) {
       case "NEW":
-        return "bg-red-500/20 text-red-700 border-red-500/30"
+        return "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
       case "ACK":
-        return "bg-yellow-500/20 text-yellow-700 border-yellow-500/30"
+        return "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30"
       case "DISPATCHED":
-        return "bg-blue-500/20 text-blue-700 border-blue-500/30"
+        return "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30"
       case "IN_PROGRESS":
-        return "bg-purple-500/20 text-purple-700 border-purple-500/30"
+        return "bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30"
       case "CLOSED":
-        return "bg-green-500/20 text-green-700 border-green-500/30"
+        return "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
       case "CANCELED":
-        return "bg-gray-500/20 text-gray-700 border-gray-500/30"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30"
       default:
-        return "bg-gray-500/20 text-gray-700 border-gray-500/30"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30"
     }
   }
 
@@ -373,9 +373,9 @@ export function IncidentDetail({ incidentId }: IncidentDetailProps) {
       {/* Header */}
       <Card className="glass-card">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <CardTitle className="flex items-center gap-2">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 min-w-0">
+              <CardTitle className="flex items-center gap-2 break-words">
                 <AlertTriangle className="w-6 h-6" />
                 Incidente {incident.id}
               </CardTitle>
@@ -383,7 +383,7 @@ export function IncidentDetail({ incidentId }: IncidentDetailProps) {
                 {getStatusLabel(incident.status)}
               </Badge>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
               {canAck && (
                 <Button
                   onClick={handleAck}
@@ -398,7 +398,7 @@ export function IncidentDetail({ incidentId }: IncidentDetailProps) {
               {canAssign && (
                 <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
                       <Car className="w-4 h-4 mr-1" />
                       Asignar Unidad
                     </Button>
@@ -667,7 +667,7 @@ export function IncidentDetail({ incidentId }: IncidentDetailProps) {
           <CardContent>
             <div className="space-y-3">
               {incident.assignments.map((assignment) => (
-                <div key={assignment.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+                <div key={assignment.id} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 bg-muted/20 rounded-lg">
                   <div>
                     <p className="font-medium">Unidad {assignment.unit_id}</p>
                     <p className="text-sm text-muted-foreground">

@@ -231,25 +231,30 @@ export function IncidentMap() {
 
   return (
     <Card className="glass-card">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardTitle className="flex flex-wrap items-center gap-2">
           <LucideMap className="w-5 h-5" />
           Mapa en Tiempo Real
-          <div className="flex gap-2 ml-4">
-            <Badge variant="outline" className="bg-red-500/20 text-red-700 border-red-500/30">
+          <div className="flex flex-wrap gap-2 sm:ml-4">
+            <Badge variant="outline" className="bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30">
               {incidents.filter((i) => i.status === "NEW").length} Nuevos
             </Badge>
-            <Badge variant="outline" className="bg-blue-500/20 text-blue-700 border-blue-500/30">
+            <Badge variant="outline" className="bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30">
               {incidents.filter((i) => ["DISPATCHED", "IN_PROGRESS"].includes(i.status)).length} Activos
             </Badge>
           </div>
         </CardTitle>
-        <div className="flex gap-2">
-          <Button variant={showUnits ? "default" : "outline"} size="sm" onClick={() => setShowUnits(!showUnits)}>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button
+            variant={showUnits ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowUnits(!showUnits)}
+            className="w-full sm:w-auto"
+          >
             <Layers className="w-4 h-4 mr-1" />
             Unidades
           </Button>
-          <Button onClick={loadMapData} variant="ghost" size="sm">
+          <Button onClick={loadMapData} variant="ghost" size="sm" className="w-full sm:w-auto">
             Actualizar
           </Button>
         </div>

@@ -77,27 +77,27 @@ export function IncidentFilters({ onFiltersChange }: IncidentFiltersProps) {
   const getStatusColor = (status: IncidentStatus) => {
     switch (status) {
       case "NEW":
-        return "bg-red-500/20 text-red-700 border-red-500/30"
+        return "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
       case "ACK":
-        return "bg-yellow-500/20 text-yellow-700 border-yellow-500/30"
+        return "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30"
       case "DISPATCHED":
-        return "bg-blue-500/20 text-blue-700 border-blue-500/30"
+        return "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30"
       case "IN_PROGRESS":
-        return "bg-purple-500/20 text-purple-700 border-purple-500/30"
+        return "bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30"
       case "CLOSED":
-        return "bg-green-500/20 text-green-700 border-green-500/30"
+        return "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
       case "CANCELED":
-        return "bg-gray-500/20 text-gray-700 border-gray-500/30"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30"
       default:
-        return "bg-gray-500/20 text-gray-700 border-gray-500/30"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30"
     }
   }
 
   return (
     <Card className="glass-card">
       <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <div className="flex flex-wrap items-center gap-2">
             <Search className="w-4 h-4" />
             <span className="font-medium">Filtros</span>
             {hasActiveFilters && (
@@ -106,13 +106,13 @@ export function IncidentFilters({ onFiltersChange }: IncidentFiltersProps) {
               </Badge>
             )}
           </div>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setShowFilters(!showFilters)}>
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+            <Button variant="ghost" size="sm" onClick={() => setShowFilters(!showFilters)} className="w-full sm:w-auto">
               <Filter className="w-4 h-4 mr-1" />
               {showFilters ? "Ocultar" : "Mostrar"}
             </Button>
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters}>
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="w-full sm:w-auto">
                 <X className="w-4 h-4 mr-1" />
                 Limpiar
               </Button>
@@ -138,7 +138,7 @@ export function IncidentFilters({ onFiltersChange }: IncidentFiltersProps) {
                 Estado: {statusOptions.find((s) => s.value === filters.status)?.label}
                 <button
                   onClick={() => handleFilterChange("status", undefined)}
-                  className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                  className="ml-1 rounded-full p-0.5 hover:bg-foreground/10"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -149,7 +149,7 @@ export function IncidentFilters({ onFiltersChange }: IncidentFiltersProps) {
                 Desde: {new Date(filters.from).toLocaleDateString("es-ES")}
                 <button
                   onClick={() => handleFilterChange("from", "")}
-                  className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                  className="ml-1 rounded-full p-0.5 hover:bg-foreground/10"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -160,7 +160,7 @@ export function IncidentFilters({ onFiltersChange }: IncidentFiltersProps) {
                 Hasta: {new Date(filters.to).toLocaleDateString("es-ES")}
                 <button
                   onClick={() => handleFilterChange("to", "")}
-                  className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                  className="ml-1 rounded-full p-0.5 hover:bg-foreground/10"
                 >
                   <X className="w-3 h-3" />
                 </button>

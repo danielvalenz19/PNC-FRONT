@@ -62,7 +62,7 @@ export default function CiudadanoPerfilPage() {
       <AdminLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Perfil del ciudadano</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Perfil del ciudadano</h1>
             <p className="text-muted-foreground">Consulta y edita información del ciudadano.</p>
           </div>
 

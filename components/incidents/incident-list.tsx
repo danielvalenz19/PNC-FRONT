@@ -149,19 +149,19 @@ export function IncidentList({ filters }: IncidentListProps) {
   const getStatusColor = (status: IncidentStatus) => {
     switch (status) {
       case "NEW":
-        return "bg-red-500/20 text-red-700 border-red-500/30"
+        return "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
       case "ACK":
-        return "bg-yellow-500/20 text-yellow-700 border-yellow-500/30"
+        return "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30"
       case "DISPATCHED":
-        return "bg-blue-500/20 text-blue-700 border-blue-500/30"
+        return "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30"
       case "IN_PROGRESS":
-        return "bg-purple-500/20 text-purple-700 border-purple-500/30"
+        return "bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30"
       case "CLOSED":
-        return "bg-green-500/20 text-green-700 border-green-500/30"
+        return "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
       case "CANCELED":
-        return "bg-gray-500/20 text-gray-700 border-gray-500/30"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30"
       default:
-        return "bg-gray-500/20 text-gray-700 border-gray-500/30"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30"
     }
   }
 
@@ -236,15 +236,15 @@ export function IncidentList({ filters }: IncidentListProps) {
 
   return (
     <Card className="glass-card">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardTitle className="flex flex-wrap items-center gap-2">
           <AlertTriangle className="w-5 h-5" />
           Lista de Incidentes
           <Badge variant="outline" className="ml-2">
             {pagination.total} total
           </Badge>
         </CardTitle>
-        <Button onClick={() => loadIncidents(filters)} variant="ghost" size="sm">
+        <Button onClick={() => loadIncidents(filters)} variant="ghost" size="sm" className="w-full sm:w-auto">
           Actualizar
         </Button>
       </CardHeader>
@@ -259,12 +259,12 @@ export function IncidentList({ filters }: IncidentListProps) {
           <>
             <div className="space-y-3">
               {incidents.map((incident) => (
-                <div
-                  key={incident.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
+              <div
+                key={incident.id}
+                className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
+              >
+                  <div className="flex flex-col gap-2 min-w-0 sm:flex-row sm:items-center sm:gap-4">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <div
                         className={`w-3 h-3 rounded-full ${getPriorityColor(incident.priority)}`}
                         title={`Prioridad ${incident.priority || "N/A"}`}
@@ -274,14 +274,14 @@ export function IncidentList({ filters }: IncidentListProps) {
                       </Badge>
                     </div>
 
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2 text-sm font-medium">
-                        <span>ID: {incident.id}</span>
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                        <span className="break-all">ID: {incident.id}</span>
                         {incident.battery && (
                           <span className="text-xs text-muted-foreground">Batería: {incident.battery}%</span>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-muted-foreground mt-1">
                         <div className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           <span>
@@ -293,7 +293,7 @@ export function IncidentList({ filters }: IncidentListProps) {
                         </div>
                         <div className="flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
-                          <span>
+                          <span className="break-all">
                             {Number.isFinite(Number(incident.lat)) && Number.isFinite(Number(incident.lng))
                               ? `${Number(incident.lat).toFixed(4)}, ${Number(incident.lng).toFixed(4)}`
                               : "Sin ubicación"}
@@ -306,8 +306,8 @@ export function IncidentList({ filters }: IncidentListProps) {
                     </div>
                   </div>
 
-                  <Link href={`/incidents/${incident.id}`}>
-                    <Button variant="ghost" size="sm">
+                  <Link href={`/incidents/${incident.id}`} className="w-full sm:w-auto">
+                    <Button variant="ghost" size="sm" className="w-full sm:w-auto">
                       <Eye className="w-4 h-4 mr-1" />
                       Ver Detalle
                     </Button>
@@ -318,16 +318,17 @@ export function IncidentList({ filters }: IncidentListProps) {
 
             {/* Pagination */}
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/25">
-                <div className="text-sm text-muted-foreground">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-6 pt-4 border-t border-border/25">
+                <div className="text-sm text-muted-foreground text-center sm:text-left">
                   Página {pagination.page} de {pagination.totalPages} ({pagination.total} total)
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={pagination.page <= 1}
                     onClick={() => loadIncidents({ ...filters, page: pagination.page - 1 })}
+                    className="w-full sm:w-auto"
                   >
                     <ChevronLeft className="w-4 h-4 mr-1" />
                     Anterior
@@ -337,6 +338,7 @@ export function IncidentList({ filters }: IncidentListProps) {
                     size="sm"
                     disabled={pagination.page >= pagination.totalPages}
                     onClick={() => loadIncidents({ ...filters, page: pagination.page + 1 })}
+                    className="w-full sm:w-auto"
                   >
                     Siguiente
                     <ChevronRight className="w-4 h-4 ml-1" />

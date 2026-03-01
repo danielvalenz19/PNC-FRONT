@@ -197,15 +197,15 @@ export function UserList({ onEditUser, onCreateUser, refreshTrigger }: UserListP
   const getRoleColor = (role: string) => {
     switch (role) {
       case "admin":
-        return "bg-purple-500/20 text-purple-700 border-purple-500/30"
+        return "bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30"
       case "supervisor":
-        return "bg-blue-500/20 text-blue-700 border-blue-500/30"
+        return "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30"
       case "operator":
-        return "bg-green-500/20 text-green-700 border-green-500/30"
+        return "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
       case "unit":
-        return "bg-orange-500/20 text-orange-700 border-orange-500/30"
+        return "bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30"
       default:
-        return "bg-gray-500/20 text-gray-700 border-gray-500/30"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30"
     }
   }
 
@@ -269,19 +269,19 @@ export function UserList({ onEditUser, onCreateUser, refreshTrigger }: UserListP
 
   return (
     <Card className="glass-card">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardTitle className="flex flex-wrap items-center gap-2">
           <Users className="w-5 h-5" />
           Gestión de Usuarios
           <Badge variant="outline" className="ml-2">
             {filteredUsers.length}
           </Badge>
         </CardTitle>
-        <div className="flex gap-2">
-          <Button onClick={loadUsers} variant="ghost" size="sm">
+        <div className="flex flex-wrap w-full sm:w-auto gap-2">
+          <Button onClick={loadUsers} variant="ghost" size="sm" className="w-full sm:w-auto">
             Actualizar
           </Button>
-          <Button onClick={onCreateUser} size="sm">
+          <Button onClick={onCreateUser} size="sm" className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-1" />
             Nuevo Usuario
           </Button>
@@ -341,28 +341,28 @@ export function UserList({ onEditUser, onCreateUser, refreshTrigger }: UserListP
             {filteredUsers.map((user) => (
               <div
                 key={user.id}
-                className="flex items-center justify-between p-4 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors border border-border/25"
+                className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors border border-border/25"
               >
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-2 min-w-0 sm:flex-row sm:items-start sm:gap-4">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline" className={getRoleColor(user.role)}>
                       {getRoleLabel(user.role)}
                     </Badge>
                     {user.status === "inactive" && (
-                      <Badge variant="outline" className="bg-gray-500/20 text-gray-700 border-gray-500/30">
+                      <Badge variant="outline" className="bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30">
                         Inactivo
                       </Badge>
                     )}
                   </div>
 
-                  <div className="flex flex-col">
+                  <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-2 text-sm font-medium">
-                      <span>{user.name}</span>
+                      <span className="truncate">{user.name}</span>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-muted-foreground mt-1">
                       <div className="flex items-center gap-1">
                         <Mail className="w-3 h-3" />
-                        <span>{user.email}</span>
+                        <span className="break-all">{user.email}</span>
                       </div>
                       {user.phone && (
                         <div className="flex items-center gap-1">
@@ -388,7 +388,7 @@ export function UserList({ onEditUser, onCreateUser, refreshTrigger }: UserListP
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex w-full sm:w-auto justify-end flex-wrap gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -409,7 +409,7 @@ export function UserList({ onEditUser, onCreateUser, refreshTrigger }: UserListP
                       <Power className="w-4 h-4 text-green-600" />
                     )}
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onEditUser(user)}>
+                  <Button variant="ghost" size="sm" onClick={() => onEditUser(user)} className="w-full sm:w-auto">
                     <Edit className="w-4 h-4 mr-1" />
                     Editar
                   </Button>
@@ -421,7 +421,7 @@ export function UserList({ onEditUser, onCreateUser, refreshTrigger }: UserListP
 
         {/* Pagination controls */}
         {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-6">
             <Button
               variant="outline"
               size="sm"
@@ -430,7 +430,7 @@ export function UserList({ onEditUser, onCreateUser, refreshTrigger }: UserListP
             >
               Anterior
             </Button>
-            <span className="flex items-center px-3 text-sm text-muted-foreground">
+            <span className="flex items-center px-3 text-sm text-muted-foreground text-center">
               Página {currentPage} de {totalPages}
             </span>
             <Button

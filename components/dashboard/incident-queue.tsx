@@ -124,19 +124,19 @@ export function IncidentQueue() {
   const getStatusColor = (status: IncidentStatus) => {
     switch (status) {
       case "NEW":
-        return "bg-red-500/20 text-red-700 border-red-500/30"
+        return "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
       case "ACK":
-        return "bg-yellow-500/20 text-yellow-700 border-yellow-500/30"
+        return "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30"
       case "DISPATCHED":
-        return "bg-blue-500/20 text-blue-700 border-blue-500/30"
+        return "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30"
       case "IN_PROGRESS":
-        return "bg-purple-500/20 text-purple-700 border-purple-500/30"
+        return "bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30"
       case "CLOSED":
-        return "bg-green-500/20 text-green-700 border-green-500/30"
+        return "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
       case "CANCELED":
-        return "bg-gray-500/20 text-gray-700 border-gray-500/30"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30"
       default:
-        return "bg-gray-500/20 text-gray-700 border-gray-500/30"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30"
     }
   }
 
@@ -211,15 +211,15 @@ export function IncidentQueue() {
 
   return (
     <Card className="glass-card">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardTitle className="flex flex-wrap items-center gap-2">
           <AlertTriangle className="w-5 h-5" />
           Cola de Incidentes
           <Badge variant="outline" className="ml-2">
             {incidents.length}
           </Badge>
         </CardTitle>
-        <Button onClick={loadIncidents} variant="ghost" size="sm">
+        <Button onClick={loadIncidents} variant="ghost" size="sm" className="w-full sm:w-auto">
           Actualizar
         </Button>
       </CardHeader>
@@ -234,10 +234,10 @@ export function IncidentQueue() {
             {incidents.map((incident) => (
               <div
                 key={incident.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
+                className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-2 min-w-0 sm:flex-row sm:items-center sm:gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <div
                       className={`w-3 h-3 rounded-full ${getPriorityColor(incident.priority)}`}
                       title={`Prioridad ${incident.priority || "N/A"}`}
@@ -247,8 +247,8 @@ export function IncidentQueue() {
                     </Badge>
                   </div>
 
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2 text-sm">
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
                       <Clock className="w-3 h-3" />
                       <span>
                         {formatDistanceToNow(new Date(incident.created_at), {
@@ -257,9 +257,9 @@ export function IncidentQueue() {
                         })}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                       <MapPin className="w-3 h-3" />
-                      <span>
+                      <span className="break-all">
                         {Number.isFinite(Number(incident.lat)) && Number.isFinite(Number(incident.lng))
                           ? `${Number(incident.lat).toFixed(4)}, ${Number(incident.lng).toFixed(4)}`
                           : "Sin ubicación"}
@@ -271,8 +271,8 @@ export function IncidentQueue() {
                   </div>
                 </div>
 
-                <Link href={`/incidents/${incident.id}`}>
-                  <Button variant="ghost" size="sm">
+                <Link href={`/incidents/${incident.id}`} className="w-full sm:w-auto">
+                  <Button variant="ghost" size="sm" className="w-full sm:w-auto">
                     <Eye className="w-4 h-4" />
                   </Button>
                 </Link>

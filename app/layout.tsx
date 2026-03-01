@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={inter.className} suppressHydrationWarning>
       <body
-        className={`font-sans min-h-screen bg-background bg-gradient-to-br from-white via-sky-50 to-white dark:from-slate-900 dark:via-purple-900 dark:to-slate-900 ${GeistSans.variable} ${GeistMono.variable}`}
+        className={`font-sans min-h-screen bg-background text-foreground ${GeistSans.variable} ${GeistMono.variable}`}
       >
         <Suspense fallback={<div>Loading...</div>}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

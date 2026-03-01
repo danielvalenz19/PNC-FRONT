@@ -31,8 +31,8 @@ export default function AuditPage() {
       <AdminLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-white text-balance">Auditoría del Sistema</h1>
-            <p className="text-white/70">Registro completo de actividades y eventos de seguridad</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground text-balance">Auditoría del Sistema</h1>
+            <p className="text-muted-foreground">Registro completo de actividades y eventos de seguridad</p>
           </div>
 
           <AuditStats dateRange={statsDateRange} />

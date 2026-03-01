@@ -84,8 +84,8 @@ export function AuditFilters({ onFiltersChange }: AuditFiltersProps) {
   return (
     <Card className="glass-card">
       <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <div className="flex flex-wrap items-center gap-2">
             <Search className="w-4 h-4" />
             <span className="font-medium">Filtros de Auditoría</span>
             {hasActiveFilters && (
@@ -94,13 +94,13 @@ export function AuditFilters({ onFiltersChange }: AuditFiltersProps) {
               </Badge>
             )}
           </div>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setShowFilters(!showFilters)}>
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+            <Button variant="ghost" size="sm" onClick={() => setShowFilters(!showFilters)} className="w-full sm:w-auto">
               <Filter className="w-4 h-4 mr-1" />
               {showFilters ? "Ocultar" : "Mostrar"}
             </Button>
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters}>
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="w-full sm:w-auto">
                 <X className="w-4 h-4 mr-1" />
                 Limpiar
               </Button>
@@ -126,7 +126,7 @@ export function AuditFilters({ onFiltersChange }: AuditFiltersProps) {
                 Usuario: {filters.actor}
                 <button
                   onClick={() => handleFilterChange("actor", "")}
-                  className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                  className="ml-1 rounded-full p-0.5 hover:bg-foreground/10"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -137,7 +137,7 @@ export function AuditFilters({ onFiltersChange }: AuditFiltersProps) {
                 Acción: {actionOptions.find((a) => a.value === filters.action)?.label}
                 <button
                   onClick={() => handleFilterChange("action", "")}
-                  className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                  className="ml-1 rounded-full p-0.5 hover:bg-foreground/10"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -148,7 +148,7 @@ export function AuditFilters({ onFiltersChange }: AuditFiltersProps) {
                 Desde: {new Date(filters.from).toLocaleDateString("es-ES")}
                 <button
                   onClick={() => handleFilterChange("from", "")}
-                  className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                  className="ml-1 rounded-full p-0.5 hover:bg-foreground/10"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -159,7 +159,7 @@ export function AuditFilters({ onFiltersChange }: AuditFiltersProps) {
                 Hasta: {new Date(filters.to).toLocaleDateString("es-ES")}
                 <button
                   onClick={() => handleFilterChange("to", "")}
-                  className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                  className="ml-1 rounded-full p-0.5 hover:bg-foreground/10"
                 >
                   <X className="w-3 h-3" />
                 </button>

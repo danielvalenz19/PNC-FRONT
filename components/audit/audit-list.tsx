@@ -71,12 +71,12 @@ export function AuditList({ filters }: AuditListProps) {
   }, [filters])
 
   const getActionColor = (action: string) => {
-    if (action.includes("login")) return "bg-green-500/20 text-green-700 border-green-500/30"
-    if (action.includes("logout")) return "bg-gray-500/20 text-gray-700 border-gray-500/30"
-    if (action.includes("create")) return "bg-blue-500/20 text-blue-700 border-blue-500/30"
-    if (action.includes("update")) return "bg-yellow-500/20 text-yellow-700 border-yellow-500/30"
-    if (action.includes("delete")) return "bg-red-500/20 text-red-700 border-red-500/30"
-    return "bg-purple-500/20 text-purple-700 border-purple-500/30"
+    if (action.includes("login")) return "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
+    if (action.includes("logout")) return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30"
+    if (action.includes("create")) return "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30"
+    if (action.includes("update")) return "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30"
+    if (action.includes("delete")) return "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
+    return "bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30"
   }
 
   const getActionLabel = (action: string) => {
@@ -169,15 +169,15 @@ export function AuditList({ filters }: AuditListProps) {
 
   return (
     <Card className="glass-card">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardTitle className="flex flex-wrap items-center gap-2">
           <FileText className="w-5 h-5" />
           Registro de Auditoría
           <Badge variant="outline" className="ml-2">
             {pagination.total} registros
           </Badge>
         </CardTitle>
-        <Button onClick={() => loadAuditEntries(filters)} variant="ghost" size="sm">
+        <Button onClick={() => loadAuditEntries(filters)} variant="ghost" size="sm" className="w-full sm:w-auto">
           Actualizar
         </Button>
       </CardHeader>
@@ -196,17 +196,17 @@ export function AuditList({ filters }: AuditListProps) {
                 return (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
+                    className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-2 min-w-0 sm:flex-row sm:items-center sm:gap-4">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Badge variant="outline" className={getActionColor(entry.action)}>
                           {getActionLabel(entry.action)}
                         </Badge>
                       </div>
 
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2 text-sm font-medium">
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
                           <User className="w-3 h-3" />
                           <span>{entry.who}</span>
                           <span className="text-muted-foreground">•</span>
@@ -214,7 +214,7 @@ export function AuditList({ filters }: AuditListProps) {
                             {getEntityLabel(entry.entity)} {entry.entity_id}
                           </span>
                         </div>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-muted-foreground mt-1">
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             <span>
@@ -235,8 +235,8 @@ export function AuditList({ filters }: AuditListProps) {
                     </div>
 
                     {entityLink && (
-                      <Link href={entityLink}>
-                        <Button variant="ghost" size="sm">
+                      <Link href={entityLink} className="w-full sm:w-auto">
+                        <Button variant="ghost" size="sm" className="w-full sm:w-auto">
                           <ExternalLink className="w-4 h-4 mr-1" />
                           Ver Detalle
                         </Button>
@@ -249,16 +249,17 @@ export function AuditList({ filters }: AuditListProps) {
 
             {/* Pagination */}
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/25">
-                <div className="text-sm text-muted-foreground">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-6 pt-4 border-t border-border/25">
+                <div className="text-sm text-muted-foreground text-center sm:text-left">
                   Página {pagination.page} de {pagination.totalPages} ({pagination.total} total)
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={pagination.page <= 1}
                     onClick={() => loadAuditEntries({ ...filters, page: pagination.page - 1 })}
+                    className="w-full sm:w-auto"
                   >
                     <ChevronLeft className="w-4 h-4 mr-1" />
                     Anterior
@@ -268,6 +269,7 @@ export function AuditList({ filters }: AuditListProps) {
                     size="sm"
                     disabled={pagination.page >= pagination.totalPages}
                     onClick={() => loadAuditEntries({ ...filters, page: pagination.page + 1 })}
+                    className="w-full sm:w-auto"
                   >
                     Siguiente
                     <ChevronRight className="w-4 h-4 ml-1" />

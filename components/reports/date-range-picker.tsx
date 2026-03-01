@@ -45,13 +45,13 @@ export function DateRangePicker({ dateRange, onDateRangeChange }: DateRangePicke
   return (
     <Card className="glass-card">
       <CardContent className="p-4">
-        <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             <span className="font-medium">Rango de fechas:</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <Label htmlFor="from" className="text-sm">
               Desde:
             </Label>
@@ -60,11 +60,11 @@ export function DateRangePicker({ dateRange, onDateRangeChange }: DateRangePicke
               type="date"
               value={localRange.from}
               onChange={(e) => setLocalRange({ ...localRange, from: e.target.value })}
-              className="w-auto bg-input/40 backdrop-blur-sm"
+              className="w-full sm:w-auto bg-input/40 backdrop-blur-sm"
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <Label htmlFor="to" className="text-sm">
               Hasta:
             </Label>
@@ -73,18 +73,18 @@ export function DateRangePicker({ dateRange, onDateRangeChange }: DateRangePicke
               type="date"
               value={localRange.to}
               onChange={(e) => setLocalRange({ ...localRange, to: e.target.value })}
-              className="w-auto bg-input/40 backdrop-blur-sm"
+              className="w-full sm:w-auto bg-input/40 backdrop-blur-sm"
             />
           </div>
 
-          <Button onClick={handleApply} size="sm">
+          <Button onClick={handleApply} size="sm" className="w-full sm:w-auto">
             <RefreshCw className="w-4 h-4 mr-1" />
             Aplicar
           </Button>
 
-          <div className="flex gap-2 ml-auto">
+          <div className="flex flex-wrap gap-2 lg:ml-auto">
             {presets.map((preset) => (
-              <Button key={preset.days} variant="outline" size="sm" onClick={() => handlePreset(preset.days)}>
+              <Button key={preset.days} variant="outline" size="sm" onClick={() => handlePreset(preset.days)} className="w-full sm:w-auto">
                 {preset.label}
               </Button>
             ))}

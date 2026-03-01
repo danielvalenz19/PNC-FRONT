@@ -130,16 +130,16 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
   const getStatusColor = (status: string) => {
     switch (status) {
       case "available":
-        return "bg-green-500/20 text-green-700 border-green-500/30"
+        return "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
       case "en_route":
       case "on_site":
-        return "bg-yellow-500/20 text-yellow-700 border-yellow-500/30"
+        return "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30"
       case "out_of_service":
-        return "bg-gray-500/20 text-gray-700 border-gray-500/30"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30"
       case "maintenance":
-        return "bg-red-500/20 text-red-700 border-red-500/30"
+        return "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
       default:
-        return "bg-gray-500/20 text-gray-700 border-gray-500/30"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30"
     }
   }
 
@@ -206,20 +206,20 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
 
   return (
     <Card className="glass-card">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardTitle className="flex flex-wrap items-center gap-2">
           <Car className="w-5 h-5" />
           Gestión de Unidades
           <Badge variant="outline" className="ml-2">
             {filteredUnits.length} de {units.length}
           </Badge>
         </CardTitle>
-        <div className="flex gap-2">
-          <Button onClick={loadUnits} variant="ghost" size="sm">
+        <div className="flex flex-wrap w-full sm:w-auto gap-2">
+          <Button onClick={loadUnits} variant="ghost" size="sm" className="w-full sm:w-auto">
             Actualizar
           </Button>
           {hasRole("admin") && (
-            <Button onClick={onCreateUnit} size="sm">
+            <Button onClick={onCreateUnit} size="sm" className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-1" />
               Nueva Unidad
             </Button>
@@ -284,25 +284,25 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
                 key={unit.id}
                 className="p-4 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors border border-border/25"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold text-lg">{unit.name}</h3>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-3">
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-lg break-words">{unit.name}</h3>
                     <p className="text-sm text-muted-foreground">{unit.type}</p>
                     {unit.plate && (
                       <div className="mt-1">
                         <span className="text-sm text-muted-foreground">Placa</span>{" "}
-                        <span className="inline-block rounded border border-slate-300 bg-white/80 px-2 py-0.5 font-mono text-xs">
+                        <span className="inline-block rounded border border-border bg-card px-2 py-0.5 font-mono text-xs text-foreground">
                           {unit.plate.toUpperCase()}
                         </span>
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
                     <Badge variant="outline" className={getStatusColor(unit.status)}>
                       {getStatusLabel(unit.status)}
                     </Badge>
                     {!unit.active && (
-                      <Badge variant="outline" className="bg-gray-500/20 text-gray-700 border-gray-500/30">
+                      <Badge variant="outline" className="bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30">
                         Inactiva
                       </Badge>
                     )}
@@ -311,9 +311,9 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
 
                 <div className="space-y-2 mb-4">
                   {Number.isFinite(Number(unit.lat)) && Number.isFinite(Number(unit.lng)) && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-start gap-2 text-sm text-muted-foreground">
                       <MapPin className="w-3 h-3" />
-                      <span>
+                      <span className="break-all">
                         {Number(unit.lat).toFixed(4)}, {Number(unit.lng).toFixed(4)}
                       </span>
                     </div>
@@ -335,7 +335,7 @@ export function UnitList({ onEditUnit, onCreateUnit, refreshTrigger }: UnitListP
 
                 {hasRole("admin") && (
                   <div className="flex justify-end">
-                    <Button variant="ghost" size="sm" onClick={() => onEditUnit(unit)}>
+                    <Button variant="ghost" size="sm" onClick={() => onEditUnit(unit)} className="w-full sm:w-auto">
                       <Edit className="w-4 h-4 mr-1" />
                       Editar
                     </Button>

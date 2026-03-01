@@ -26,7 +26,7 @@ export default function ReportsPage() {
       <AdminLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground text-balance">Reportes y KPIs</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground text-balance">Reportes y KPIs</h1>
             <p className="text-muted-foreground">Análisis de rendimiento y métricas del sistema</p>
           </div>
 

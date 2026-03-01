@@ -23,10 +23,10 @@ export default function AlertsPopover() {
         </button>
       </PopoverTrigger>
 
-      <PopoverContent align="end" className="w-80 p-0">
-        <div className="flex items-center justify-between px-3 py-2">
+      <PopoverContent align="end" className="w-[min(20rem,calc(100vw-1rem))] p-0">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
           <div className="text-sm font-medium">Alertas</div>
-          <div className="flex gap-2">
+          <div className="flex gap-1 sm:gap-2">
             <Button size="sm" variant="ghost" onClick={markAllRead}>
               Marcar leídas
             </Button>
@@ -62,4 +62,3 @@ export default function AlertsPopover() {
     </Popover>
   );
 }
-

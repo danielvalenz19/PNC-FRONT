@@ -65,6 +65,22 @@ export function IncidentsVolumeChart({ dateRange }: IncidentsVolumeChartProps) {
     })
   }
 
+  const cssColor = (name: string, fallback: string) => {
+    if (typeof window === "undefined") return fallback
+    const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+    if (!raw) return fallback
+    if (/^\d+(?:\.\d+)?\s+\d+(?:\.\d+)?%\s+\d+(?:\.\d+)?%$/.test(raw)) return `hsl(${raw})`
+    return raw
+  }
+
+  const gridColor = cssColor("--border", "rgba(148, 163, 184, 0.35)")
+  const axisColor = cssColor("--muted-foreground", "#64748b")
+  const tooltipBg = cssColor("--popover", "#ffffff")
+  const tooltipBorder = cssColor("--border", "#e5e7eb")
+  const tooltipText = cssColor("--popover-foreground", "#111827")
+  const incidentsColor = cssColor("--chart-1", "#3b82f6")
+  const resolvedColor = cssColor("--chart-2", "#10b981")
+
   if (loading) {
     return (
       <Card className="glass-card">
@@ -119,23 +135,23 @@ export function IncidentsVolumeChart({ dateRange }: IncidentsVolumeChartProps) {
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDate}
-                stroke="#111"
-                tick={{ fill: "#111", fontSize: 12 }}
+                stroke={axisColor}
+                tick={{ fill: axisColor, fontSize: 12 }}
               />
               <YAxis
-                stroke="#111"
-                tick={{ fill: "#111", fontSize: 12 }}
+                stroke={axisColor}
+                tick={{ fill: axisColor, fontSize: 12 }}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#fff",
-                  border: "1px solid #e5e7eb",
+                  backgroundColor: tooltipBg,
+                  border: `1px solid ${tooltipBorder}`,
                   borderRadius: "8px",
-                  color: "#111",
+                  color: tooltipText,
                 }}
                 labelFormatter={(label) => `Fecha: ${formatDate(label)}`}
                 formatter={(value: number, name: string) => [
@@ -143,8 +159,8 @@ export function IncidentsVolumeChart({ dateRange }: IncidentsVolumeChartProps) {
                   name === "incidents_count" ? "Incidentes Totales" : "Incidentes Resueltos",
                 ]}
               />
-              <Bar dataKey="incidents_count" fill="#3b82f6" name="Incidentes Totales" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="resolved_count" fill="#10b981" name="Incidentes Resueltos" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="incidents_count" fill={incidentsColor} name="Incidentes Totales" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="resolved_count" fill={resolvedColor} name="Incidentes Resueltos" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

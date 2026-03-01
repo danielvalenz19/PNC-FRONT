@@ -11,9 +11,9 @@
   --light-green: #9ee493ff;
   --nyanza: #daf7dcff;
 
-  --background: var(--nyanza);
+  --background: #f4faf6;
   --foreground: var(--charcoal);
-  --card: rgba(255, 255, 255, 0.3);
+  --card: rgba(255, 255, 255, 0.74);
   --card-foreground: var(--charcoal);
   --popover: rgba(255, 255, 255, 0.9);
   --popover-foreground: var(--charcoal);
@@ -21,16 +21,16 @@
   --primary-foreground: #ffffff;
   --secondary: var(--carolina-blue);
   --secondary-foreground: #ffffff;
-  --muted: rgba(255, 255, 255, 0.5);
-  --muted-foreground: var(--charcoal);
+  --muted: rgba(255, 255, 255, 0.72);
+  --muted-foreground: #4a6170;
   --accent: var(--carolina-blue);
   --accent-foreground: #ffffff;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --success: var(--light-green);
-  --success-foreground: var(--charcoal);
-  --border: rgba(255, 255, 255, 0.25);
-  --input: rgba(255, 255, 255, 0.4);
+  --success-foreground: var(--foreground);
+  --border: rgba(47, 72, 88, 0.16);
+  --input: rgba(255, 255, 255, 0.72);
   --ring: var(--lapis-lazuli);
   --chart-1: var(--lapis-lazuli);
   --chart-2: var(--carolina-blue);
@@ -38,45 +38,45 @@
   --chart-4: var(--charcoal);
   --chart-5: #f59e0b;
   --radius: 1rem;
-  --sidebar: rgba(255, 255, 255, 0.2);
+  --sidebar: rgba(255, 255, 255, 0.7);
   --sidebar-foreground: var(--charcoal);
   --sidebar-primary: var(--lapis-lazuli);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: var(--carolina-blue);
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgba(255, 255, 255, 0.25);
+  --sidebar-border: rgba(47, 72, 88, 0.14);
   --sidebar-ring: var(--lapis-lazuli);
 }
 
 .dark {
-  --background: var(--charcoal);
+  --background: #1d3140;
   --foreground: #ffffff;
-  --card: rgba(255, 255, 255, 0.1);
+  --card: rgba(24, 39, 52, 0.78);
   --card-foreground: #ffffff;
-  --popover: rgba(47, 72, 88, 0.95);
+  --popover: rgba(19, 34, 47, 0.95);
   --popover-foreground: #ffffff;
   --primary: var(--carolina-blue);
   --primary-foreground: var(--charcoal);
   --secondary: var(--lapis-lazuli);
   --secondary-foreground: #ffffff;
-  --muted: rgba(255, 255, 255, 0.1);
-  --muted-foreground: rgba(255, 255, 255, 0.7);
+  --muted: rgba(134, 187, 216, 0.16);
+  --muted-foreground: rgba(226, 236, 243, 0.78);
   --accent: var(--carolina-blue);
   --accent-foreground: var(--charcoal);
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --success: var(--light-green);
-  --success-foreground: var(--charcoal);
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.1);
+  --success-foreground: var(--foreground);
+  --border: rgba(134, 187, 216, 0.24);
+  --input: rgba(134, 187, 216, 0.2);
   --ring: var(--carolina-blue);
-  --sidebar: rgba(255, 255, 255, 0.05);
+  --sidebar: rgba(19, 34, 47, 0.74);
   --sidebar-foreground: #ffffff;
   --sidebar-primary: var(--carolina-blue);
   --sidebar-primary-foreground: var(--charcoal);
   --sidebar-accent: var(--lapis-lazuli);
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-border: rgba(134, 187, 216, 0.2);
   --sidebar-ring: var(--carolina-blue);
 }
 
@@ -133,15 +133,15 @@
 
   /* Adding liquid glass utility classes */
   .glass-card {
-    @apply bg-card/30 backdrop-blur-md border border-white/25 rounded-2xl shadow-lg;
+    @apply bg-card backdrop-blur-md border border-border rounded-2xl shadow-lg;
   }
 
   .glass-sidebar {
-    @apply bg-sidebar/20 backdrop-blur-md border-r border-sidebar-border/25;
+    @apply bg-sidebar backdrop-blur-md border-r border-sidebar-border;
   }
 
   .glass-topbar {
-    @apply bg-card/20 backdrop-blur-md border-b border-border/25;
+    @apply bg-card backdrop-blur-md border-b border-border;
   }
 }
 /* MapRealtime styles */
